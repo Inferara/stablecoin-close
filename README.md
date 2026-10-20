@@ -196,7 +196,7 @@ Plain HTML and JavaScript, no build step. They talk to Soroban RPC
 with subresource integrity. Signing is done with Freighter for now; signing with a
 passkey smart account is the next step.
 
-- **Payer** — `pages/payer/?invoice=<hash>&merchant=<G… address>[&contract=<id>]`.
+- **Payer** — `pages/payer/?invoice=<hash>&merchant=<G… address>` (only the InvoiceSettlement contract published in `deployments/testnet.json` is accepted).
   Shows the invoice number, amount, asset (with its contract id), merchant and due
   date; connects [Freighter](https://freighter.app) (set to Testnet); checks the
   wallet's balance; builds `pay_invoice`, simulates it, asks Freighter to sign,

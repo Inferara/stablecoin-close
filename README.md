@@ -22,9 +22,9 @@ the parts anyone can use or check without Haruno:
 |---|---|
 | [`contracts/invoice-settlement`](contracts/invoice-settlement/src/lib.rs) | `InvoiceSettlement`: register an invoice by hash; pay it in one call that sends the registered amount of the registered asset to the merchant and emits `invoice_paid`. |
 | [`contracts/report-anchor`](contracts/report-anchor/src/lib.rs) | `ReportAnchor`: record the SHA-256 of a signed-off close report, one per company and month. |
-| [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. |
-| [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. |
-| [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. |
+| [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. [Live](https://inferara.github.io/stablecoin-close/pages/payer/) |
+| [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. [Live](https://inferara.github.io/stablecoin-close/pages/anchor/) |
+| [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. [Live](https://inferara.github.io/stablecoin-close/pages/verifier/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
@@ -182,13 +182,18 @@ use a salt that is not published:
 - `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/a2b4b4b449e4bd3fc8ba40a12255fbe52e3413a1d9203c4ff9ab784a4f515596)
   with a transaction built by the payer page and signed outside it.
 - `INV-DEMO-0003`, 5.00 USDC: left open for trying the payer page:
-  [`pages/payer/?invoice=4d5fd849…&merchant=GB4SLT…`](pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G)
+  [`pages/payer/?invoice=4d5fd849…&merchant=GB4SLT…`](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G)
 - [`pages/verifier/sample-report.pdf`](pages/verifier/sample-report.pdf) is [anchored](https://stellar.expert/explorer/testnet/tx/aaa75f8a8080891a3fe1e3c8d83b2342efec94889d18c67c62cfe560e5844f99)
-  for period `2026-09`; the verifier page's "Try it with a sample report" link checks it.
+  for period `2026-09`; the [verifier page](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09)'s
+  "Try it with a sample report" link checks it.
   Anchoring `2026-10` for the same company from another account was refused with
   `Error(Contract, #3)`.
 
 ## Pages
+
+Live on GitHub Pages: [payer](https://inferara.github.io/stablecoin-close/pages/payer/),
+[anchor](https://inferara.github.io/stablecoin-close/pages/anchor/),
+[verifier](https://inferara.github.io/stablecoin-close/pages/verifier/).
 
 Plain HTML and JavaScript, no build step. They talk to Soroban RPC
 (`https://soroban-testnet.stellar.org`) directly from the browser and load
@@ -251,8 +256,8 @@ python -m http.server 8000
 # http://localhost:8000/pages/anchor/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09&report=f9103bbedcc8c3732c6184f94ef9a4fcb1d929d8517443e58df80594fc872a39
 ```
 
-Any static host works (GitHub Pages, for example); serve the repository root so that
-`pages/shared/` resolves.
+Any static host works; serve the repository root so that `pages/shared/` resolves.
+The live copies above are this repository's `main` on GitHub Pages.
 
 ## Snapshot format and reference fetcher
 

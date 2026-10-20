@@ -1,0 +1,16 @@
+{
+  "name": "stellar-month-fetcher",
+  "version": "0.1.0",
+  "description": "Reference fetcher: writes a haruno.stellar.month/1 snapshot for a set of Stellar accounts and one month.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "bin": { "stellar-month": "bin/fetch-month.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.2.1"
+  }
+}

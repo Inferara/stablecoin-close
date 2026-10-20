@@ -1,0 +1,22 @@
+{
+  "company": "lisbon-coffee-roasters",
+  "reporting_currency": "USD",
+  "network": "testnet",
+  "invoice_contract": "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
+  "wallets": [
+    {
+      "id": "w-1",
+      "name": "Treasury",
+      "purpose": "receivables",
+      "address": "GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G",
+      "gl_account": "USDC Treasury"
+    },
+    {
+      "id": "w-2",
+      "name": "Payroll",
+      "purpose": "payroll",
+      "address": "GCNWK6IDAWJVBTASSSE62CB2UWO4QIYRCPN5MM3EQLSSPZZ6IYKJTQIL",
+      "gl_account": null
+    }
+  ]
+}

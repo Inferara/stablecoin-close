@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pay Invoice</title>
+  <meta name="description" content="Pay an invoice registered in the InvoiceSettlement contract on Stellar.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../shared/style.css">
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Pay invoice</h1>
+    <span class="badge" id="net-badge">Stellar testnet</span>
+  </header>
+
+  <div id="error" class="notice error" role="alert" hidden></div>
+
+  <!-- Shown when the link carries no invoice. -->
+  <section id="ask" class="card" hidden>
+    <p>Open this page from the payment link or QR code on your invoice, or paste the invoice hash.</p>
+    <form id="ask-form">
+      <label class="field"><span>Invoice hash (64 hex characters)</span>
+        <input type="text" id="ask-hash" autocomplete="off" spellcheck="false" inputmode="text"></label>
+      <button type="submit">Show invoice</button>
+    </form>
+  </section>
+
+  <section id="loading" class="card" hidden><p>Loading the invoice from the ledger…</p></section>
+
+  <section id="invoice" hidden>
+    <div class="card">
+      <p class="label">Invoice</p>
+      <p style="font-size:1.25rem;font-weight:600;margin:0 0 14px" id="inv-number"></p>
+      <p class="label">Amount due</p>
+      <p class="big"><span id="inv-amount"></span> <span class="unit" id="inv-code"></span></p>
+      <dl class="rows">
+        <div><dt>Status</dt><dd><span class="pill" id="inv-status"></span></dd></div>
+        <div><dt>Pay to</dt><dd class="mono" id="inv-merchant"></dd></div>
+        <div><dt>Asset</dt><dd id="inv-asset"></dd></div>
+        <div><dt>Due</dt><dd id="inv-due"></dd></div>
+      </dl>
+    </div>
+
+    <div class="card" id="paid-card" hidden>
+      <p class="label">Paid</p>
+      <dl class="rows" style="margin-top:6px">
+        <div><dt>By</dt><dd class="mono" id="paid-by"></dd></div>
+        <div><dt>Ledger</dt><dd id="paid-ledger"></dd></div>
+        <div><dt>Time</dt><dd id="paid-time"></dd></div>
+      </dl>
+      <p style="margin:14px 0 0"><a id="paid-link" target="_blank" rel="noopener">View on StellarExpert</a></p>
+    </div>
+
+    <div class="card" id="pay-card" hidden>
+      <div id="wallet-line" class="hint" hidden></div>
+      <div id="balance-line" class="hint" hidden></div>
+      <button id="connect">Connect Freighter</button>
+      <button id="pay" hidden></button>
+      <p class="hint" style="margin:12px 0 0">The contract sends exactly the amount and asset above to the merchant. You confirm it in your wallet.</p>
+    </div>
+  </section>
+
+  <section id="success" hidden>
+    <div class="result ok">
+      <div class="icon" aria-hidden="true">&#10003;</div>
+      <h2>Payment sent</h2>
+      <p id="success-text"></p>
+    </div>
+    <a class="button" id="success-link" target="_blank" rel="noopener">View transaction on StellarExpert</a>
+  </section>
+
+  <footer>
+    InvoiceSettlement contract <span class="mono" id="contract-id"></span><br>
+    <a href="https://github.com/Inferara/stablecoin-close">Source</a>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@17.2.1/dist/stellar-sdk.min.js"
+        integrity="sha384-z72iOjWW+lhGmZrU900uVQX76pdHCbGOL7YyFgTd/mzXLbHQtQuUrxGOfETZJM/D"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@6.0.1/build/index.min.js"
+        integrity="sha384-PBwq0JVfqy16Z6jvKJPx93jpStXbwF2oWvsRTODkvE/3hOX5zmLvAuMiKgAaxe2b"
+        crossorigin="anonymous"></script>
+<script src="../shared/soroban.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

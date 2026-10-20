@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report Verifier</title>
+  <meta name="description" content="Check a close report PDF against the hash anchored on Stellar.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../shared/style.css">
+  <style>
+    #drop {
+      display: block;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px 16px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--surface);
+      margin-bottom: 16px;
+    }
+    #drop.over { border-color: var(--accent); background: var(--bg); }
+    #drop strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+    #file { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    #file:focus-visible + #drop { outline: 2px solid var(--accent); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Verify a close report</h1>
+    <span class="badge">Stellar testnet</span>
+  </header>
+
+  <div id="error" class="notice error" role="alert" hidden></div>
+
+  <div id="result" class="result" hidden aria-live="polite">
+    <div class="icon" id="result-icon" aria-hidden="true"></div>
+    <h2 id="result-title"></h2>
+    <p id="result-text"></p>
+  </div>
+
+  <input type="file" id="file" accept="application/pdf,.pdf">
+  <label id="drop" for="file">
+    <strong id="drop-title">Drop the report PDF here</strong>
+    <span class="hint" id="drop-hint">or tap to choose a file. It never leaves your device: only its fingerprint is compared.</span>
+  </label>
+
+  <section class="card">
+    <form id="form">
+      <label class="field"><span>Company ID hash (64 hex characters)</span>
+        <input type="text" id="company" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span>Period</span>
+        <input type="month" id="period" placeholder="YYYY-MM"></label>
+      <button type="submit" id="check">Check</button>
+    </form>
+    <p class="hint" style="margin:12px 0 0">The company and period usually come with the verification link you were given.</p>
+  </section>
+
+  <section class="card" id="details" hidden>
+    <p class="label">Anchored on chain</p>
+    <dl class="rows" style="margin-top:6px">
+      <div><dt>Time</dt><dd id="d-time"></dd></div>
+      <div><dt>Ledger</dt><dd id="d-ledger"></dd></div>
+      <div><dt>Signed by</dt><dd class="mono" id="d-signer"></dd></div>
+      <div><dt>Anchored hash</dt><dd class="mono" id="d-anchored"></dd></div>
+      <div><dt>This file</dt><dd class="mono" id="d-file"></dd></div>
+    </dl>
+    <p style="margin:14px 0 0"><a id="d-link" target="_blank" rel="noopener">View on StellarExpert</a></p>
+  </section>
+
+  <p class="hint" style="text-align:center"><a id="sample" href="#">Try it with a sample report</a></p>
+
+  <footer>
+    ReportAnchor contract <span class="mono" id="contract-id"></span><br>
+    <a href="https://github.com/Inferara/stablecoin-close">Source</a>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@17.2.1/dist/stellar-sdk.min.js"
+        integrity="sha384-z72iOjWW+lhGmZrU900uVQX76pdHCbGOL7YyFgTd/mzXLbHQtQuUrxGOfETZJM/D"
+        crossorigin="anonymous"></script>
+<script src="../shared/soroban.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

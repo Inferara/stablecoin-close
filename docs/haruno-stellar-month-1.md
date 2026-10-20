@@ -1,9 +1,10 @@
 # `haruno.stellar.month/1` — one company's Stellar wallets for one month
 
-A connector writes one file per company per calendar month (UTC), and Haruno's
-books engine reads it on close. The file is the whole contract between the two:
-neither side reads the other's code or data. `tools/fetcher` in this repository
-is an open reference implementation of the writing side.
+A connector writes one file per company per calendar month (UTC), and a reader
+(Haruno's books engine, or anything else) consumes it. The file is the whole
+contract between the two: neither side reads the other's code or data.
+`tools/fetcher` in this repository is an open reference implementation of the
+writing side.
 
 ## Shape
 
@@ -48,7 +49,7 @@ is an open reference implementation of the writing side.
               "memo": "INV-1001",
               "invoice_ref": "INV-1001",
               "invoice_ref_source": "contract",
-              "rate": { "usd": "1", "jpy": "151.20", "source": "par;frankfurter.app" }
+              "rate": { "usd": "1", "jpy": "151.20", "source": "par;frankfurter.dev 2026-10-05" }
             }
           ]
         }
@@ -84,24 +85,27 @@ is an open reference implementation of the writing side.
 - `internal: true` when the counterparty is another wallet of the same company in
   this file; `counterparty_wallet` then names its `id`. Both legs appear, one per
   wallet. Internal movements are never income, expense, or unexplained.
-- `invoice_ref_source`: `contract` (an `invoice_paid` event of the configured
-  invoice contract — high confidence), `memo` (parsed from the memo — low
-  confidence), or `null` with `invoice_ref: null`.
+- `invoice_ref_source`: `contract` (taken from the configured invoice contract:
+  its `invoice_paid` event or the `pay_invoice` call that moved the funds — high
+  confidence), `memo` (parsed from the memo — low confidence), or `null` with
+  `invoice_ref: null`.
 - `rate.usd` is the USD value of one unit at `time`; `rate.jpy` the JPY value of one
-  unit. `rate.source` names where each number came from.
+  unit. `rate.source` names where each number came from (for example
+  `par;frankfurter.dev 2026-10-05`: USD at par, JPY from frankfurter.dev's rate
+  for that date).
 - `gl_account` is the books account the wallet maps to, by name; `null` means
-  "not mapped" (no reconciliation row, a note instead).
+  "not mapped": a reader has nothing to reconcile it against and should say so.
 - Addresses are public keys only (`G…` accounts, `C…` contracts). No secret
   material ever appears in this file.
 - `asset.code` is `XLM` with `issuer: null` for the native asset.
 - `unexplained_threshold` (optional, decimal string in the reporting currency)
-  is the company's setting for the books' unexplained-movement check: a
-  non-internal movement whose value reaches it and that nothing explains is a
-  finding. Absent means the books' own default.
+  is the company's setting for unexplained movements: a reader should flag a
+  non-internal movement whose value reaches it and that nothing explains.
+  Absent means the reader's own default.
 - One file holds all of the company's wallets. `source.network` is `testnet` or
   `mainnet` when every wallet is on that network (each wallet must then match),
-  and `mixed` when both appear. Internal transfers never cross networks. A file
-  with any testnet wallet is noted as such on close.
+  and `mixed` when both appear. Internal transfers never cross networks. A reader
+  should make it visible when a file has any testnet wallet.
 - `source.kind` names the services read, joined with `+` (`horizon`, `rpc`).
   `source.balances` is `current`, `reconstructed` (worked back from today's
   balance) or `incomplete` (at least one wallet-asset has a `caveat`).
@@ -111,8 +115,8 @@ is an open reference implementation of the writing side.
   is none). The connector sets it when it knows `opening`/`closing` may be wrong,
   for example when the wallet traded on the DEX, held claimable balances, was
   clawed back, or used a liquidity pool, so the balance worked back from today's
-  cannot be trusted. The books never mark such a wallet-asset reconciled: its
-  reconciliation row is an exception carrying the sentence.
+  cannot be trusted. A reader must not treat such a wallet-asset as reconciled,
+  and should show the sentence.
 - An unknown rate is `"0"` and `rate.source` says which side is unknown
   (`unpriced` for USD, `unpriced-jpy` for JPY). `"0"` there means unknown, never
   worthless.

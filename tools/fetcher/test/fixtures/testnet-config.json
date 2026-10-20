@@ -2,7 +2,7 @@
   "company": "lisbon-coffee-roasters",
   "reporting_currency": "USD",
   "network": "testnet",
-  "invoice_contract": "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
+  "invoice_contract": "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4",
   "wallets": [
     {
       "id": "w-1",

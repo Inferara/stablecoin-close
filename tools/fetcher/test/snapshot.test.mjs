@@ -29,15 +29,18 @@ test("replaying the recorded testnet month reproduces the committed snapshot", (
   assert.deepEqual(validateSnapshot(snapshot), []);
 });
 
-test("pay_invoice transfers carry the invoice number from the contract", () => {
+test("pay_invoice transfers carry the invoice number from the configured contract only", () => {
   const s = buildSnapshot(fixture("testnet-2026-10.input.json"));
   const usdc = asset(wallet(s, "Treasury"), "USDC");
   assert.equal(usdc.asset.contract, USDC_SAC);
+  // The first two were paid through an earlier deployment that the config
+  // does not name, so they carry no invoice reference.
   assert.deepEqual(
     usdc.movements.map((m) => [m.kind, m.direction, m.amount, m.invoice_ref, m.invoice_ref_source]),
     [
+      ["sac_transfer", "in", "12.5000000", null, null],
+      ["sac_transfer", "in", "5.0000000", null, null],
       ["sac_transfer", "in", "12.5000000", "INV-DEMO-0001", "contract"],
-      ["sac_transfer", "in", "5.0000000", "INV-DEMO-0002", "contract"],
     ],
   );
   assert.equal(s.source.kind, "horizon+rpc");
@@ -76,7 +79,7 @@ test("a path payment to oneself is a conversion: two legs, own address, not inte
 test("fees are XLM out, op 0, one per transaction, never internal", () => {
   const s = buildSnapshot(fixture("testnet-2026-10.input.json"));
   const fees = asset(wallet(s, "Payroll"), "XLM").movements.filter((m) => m.kind === "fee");
-  assert.equal(fees.length, 4);
+  assert.equal(fees.length, 5);
   for (const f of fees) assert.deepEqual([f.direction, f.op_index, f.internal], ["out", 0, false]);
   assert.equal(new Set(fees.map((f) => f.tx_hash)).size, fees.length);
 });

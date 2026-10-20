@@ -14,6 +14,12 @@
   let fileName = null;
 
   $("contract-id").textContent = X.shortAddr(contractId);
+  const network = X.param("network") || "testnet";
+  if (network !== "testnet") {
+    $("error").textContent = `The network "${network}" is not supported here; only testnet is.`;
+    $("error").hidden = false;
+    $("check").disabled = true;
+  }
   $("company").value = (X.param("company") || "").toLowerCase();
   $("period").value = X.param("period") || "";
 

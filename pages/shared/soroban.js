@@ -111,6 +111,85 @@
     }
   }
 
+  // --- Signing with Freighter (payer and anchor pages) ---
+
+  async function freighter() {
+    const f = window.freighterApi;
+    if (!f) throw new Error("The Freighter library did not load. Reload the page.");
+    const c = await f.isConnected();
+    if (!c || !c.isConnected) {
+      throw new Error("Freighter is not installed. Install the Freighter browser extension (freighter.app) and reload.");
+    }
+    return f;
+  }
+
+  // Asks Freighter for access and returns the wallet's address, refusing a
+  // wallet set to another network.
+  async function connectFreighter() {
+    const f = await freighter();
+    const access = await f.requestAccess();
+    if (access.error) throw new Error(access.error.message || String(access.error));
+    const details = await f.getNetworkDetails();
+    if (details.error) throw new Error(details.error.message || String(details.error));
+    if (details.networkPassphrase !== net.passphrase) {
+      throw new Error("Freighter is on another network. Switch it to Testnet and try again.");
+    }
+    return access.address;
+  }
+
+  // Builds a contract call from `address` and simulates it, so the
+  // transaction carries its footprint, fee and auth entries. Simulation
+  // errors surface as ContractError when the contract refused.
+  async function prepareCall(address, contractId, method, args) {
+    let account;
+    try {
+      account = await server.getAccount(address);
+    } catch (e) {
+      throw new Error("This wallet account does not exist on testnet yet. Fund it with Friendbot first.");
+    }
+    try {
+      return await server.prepareTransaction(buildCall(account, contractId, method, args));
+    } catch (e) {
+      const code = contractErrorCode(e && (e.message || e));
+      if (code !== null) throw new ContractError(code, String(e.message || e));
+      throw e;
+    }
+  }
+
+  // Signs a prepared transaction in Freighter, submits it and waits for the
+  // result. `onStep` gets "sign" and "send" for button labels.
+  async function signAndSubmit(prepared, address, onStep = () => {}) {
+    const f = await freighter();
+    onStep("sign");
+    const signed = await f.signTransaction(prepared.toXDR(), {
+      networkPassphrase: net.passphrase,
+      address,
+    });
+    if (signed.error) throw new Error(signed.error.message || String(signed.error));
+    onStep("send");
+    const sent = await server.sendTransaction(S.TransactionBuilder.fromXDR(signed.signedTxXdr, net.passphrase));
+    if (sent.status === "ERROR") throw new Error("The network rejected the transaction.");
+    const done = await waitFor(sent.hash);
+    if (done.status !== S.rpc.Api.GetTransactionStatus.SUCCESS) {
+      throw new Error(`The transaction failed (${done.status}).`);
+    }
+    return { hash: sent.hash, ledger: done.ledger };
+  }
+
+  // Copies text and briefly confirms on the button.
+  function copyButton(button, text) {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(text());
+        const was = button.textContent;
+        button.textContent = "Copied";
+        setTimeout(() => { button.textContent = was; }, 1200);
+      } catch (e) {
+        /* clipboard refused: the full value is in the title attribute */
+      }
+    });
+  }
+
   function topicSymbol(name) {
     return S.xdr.ScVal.scvSymbol(name).toXDR("base64");
   }
@@ -155,6 +234,6 @@
   window.Soroban = {
     S, net, server, DEFAULT_CONTRACTS, ContractError, contractErrorCode,
     isContractId, isHash, bytes32, hexToBytes, bytesToHex, buildCall, read, waitFor,
-    findEventTx, topicSymbol, topicString, topicBytes, shortAddr, formatUnits, formatTime, param,
+    findEventTx, connectFreighter, prepareCall, signAndSubmit, copyButton, topicSymbol, topicString, topicBytes, shortAddr, formatUnits, formatTime, param,
   };
 })();

@@ -23,6 +23,7 @@ the parts anyone can use or check without Haruno:
 | [`contracts/invoice-settlement`](contracts/invoice-settlement/src/lib.rs) | `InvoiceSettlement`: register an invoice by hash; pay it in one call that sends the registered amount of the registered asset to the merchant and emits `invoice_paid`. |
 | [`contracts/report-anchor`](contracts/report-anchor/src/lib.rs) | `ReportAnchor`: record the SHA-256 of a signed-off close report, one per company and month. |
 | [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. |
+| [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. |
 | [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
@@ -157,10 +158,37 @@ with subresource integrity.
   (set to Testnet); checks the wallet's balance; builds `pay_invoice`, simulates it,
   asks Freighter to sign, submits, and shows a success screen with a StellarExpert
   link. A paid invoice shows who paid and when. The wallet needs a USDC trustline.
+- **Anchor (sign-off)** — opened by Haruno when a close is signed off; see the URL
+  contract below. Shows the period and the two hashes (shortened, with copy buttons)
+  and the contract; connects Freighter, builds `anchor(signer, company_id_hash, period,
+  report_sha256)` through the same simulate, sign and submit path as the payer page,
+  and ends on a success screen with the transaction link and a ready verifier link for
+  that company and period. If the period is already anchored it shows that anchor
+  instead, and whether it matches the given report hash, and offers nothing to sign.
 - **Verifier** — `pages/verifier/?company=<company_id_hash>&period=<YYYY-MM>[&contract=<id>]`.
   Drop a PDF (or tap to pick one); it is hashed in the browser with WebCrypto and
   never uploaded. The page shows "Matches the anchored report", "Does not match" or
   "Nothing anchored", with the time, ledger, signer and an explorer link.
+
+### Haruno opens the anchor page
+
+```
+pages/anchor/?company=<company_id_hash>&period=<YYYY-MM>&report=<report_sha256>&contract=<ReportAnchor id>&network=testnet
+```
+
+| Parameter | Required | Rule |
+|---|---|---|
+| `company` | yes | 64 hex characters: the company id hash, used as given |
+| `period` | yes | `YYYY-MM`, month 01-12 |
+| `report` | yes | 64 hex characters: SHA-256 of the report PDF |
+| `contract` | no | a `C…` contract id; defaults to the testnet ReportAnchor above |
+| `network` | no | `testnet` (the only one supported); anything else is refused |
+
+Every parameter is checked before anything is shown; an invalid link lists what is
+wrong and offers nothing to sign. The URL carries hashes only, nothing personal. The
+page never derives `company_id_hash`: how the caller computes it, and with which salt,
+is up to the caller. The verifier page takes the same `company`, `period`, `contract`
+and `network` parameters.
 
 Run them locally from the repository root:
 
@@ -168,6 +196,7 @@ Run them locally from the repository root:
 python -m http.server 8000
 # http://localhost:8000/pages/payer/?invoice=4a96924aec788b739406b0700520e992169048e5aa058fa4a4015a029fbf4303
 # http://localhost:8000/pages/verifier/
+# http://localhost:8000/pages/anchor/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09&report=f9103bbedcc8c3732c6184f94ef9a4fcb1d929d8517443e58df80594fc872a39
 ```
 
 Any static host works (GitHub Pages, for example); serve the repository root so that

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report Sign-off</title>
+  <meta name="description" content="Anchor a signed-off close report's hash in the ReportAnchor contract on Stellar.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../shared/style.css">
+  <style>
+    .hashrow { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .hashrow span { white-space: nowrap; }
+    .hashrow button {
+      display: inline-block; flex: none; white-space: nowrap; width: auto; min-height: 32px; padding: 4px 10px;
+      font-size: 0.8rem; background: transparent; color: var(--accent); border: 1px solid var(--border);
+    }
+    .hashrow button + button { margin-top: 0; }
+  </style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Sign off a close</h1>
+    <span class="badge">Stellar testnet</span>
+  </header>
+
+  <div id="error" class="notice error" role="alert" hidden></div>
+
+  <div id="result" class="result" hidden aria-live="polite">
+    <div class="icon" id="result-icon" aria-hidden="true"></div>
+    <h2 id="result-title"></h2>
+    <p id="result-text"></p>
+  </div>
+
+  <section id="request" class="card" hidden>
+    <p class="label">Period</p>
+    <p class="big" id="r-period"></p>
+    <dl class="rows">
+      <div><dt>Report SHA-256</dt><dd class="hashrow"><span class="mono" id="r-report"></span><button type="button" id="copy-report">Copy</button></dd></div>
+      <div><dt>Company</dt><dd class="hashrow"><span class="mono" id="r-company"></span><button type="button" id="copy-company">Copy</button></dd></div>
+      <div><dt>Contract</dt><dd><a class="mono" id="r-contract" target="_blank" rel="noopener"></a></dd></div>
+    </dl>
+  </section>
+
+  <section id="sign-card" class="card" hidden>
+    <div id="wallet-line" class="hint" hidden></div>
+    <button id="connect">Connect Freighter</button>
+    <button id="sign" hidden>Anchor this report</button>
+    <p class="hint" style="margin:12px 0 0">Your wallet signs the anchor, so it records you as the reviewer.
+      A period can be anchored once; it cannot be changed afterwards.</p>
+  </section>
+
+  <section id="existing" class="card" hidden>
+    <p class="label">Anchored on chain</p>
+    <dl class="rows" style="margin-top:6px">
+      <div><dt>Time</dt><dd id="e-time"></dd></div>
+      <div><dt>Ledger</dt><dd id="e-ledger"></dd></div>
+      <div><dt>Signed by</dt><dd class="mono" id="e-signer"></dd></div>
+      <div><dt>Anchored hash</dt><dd class="mono" id="e-hash"></dd></div>
+    </dl>
+  </section>
+
+  <section id="links" hidden>
+    <a class="button" id="tx-link" target="_blank" rel="noopener">View on StellarExpert</a>
+    <div class="card" style="margin-top:16px">
+      <p class="label">Verifier link for this company and period</p>
+      <p class="mono" style="overflow-wrap:anywhere;margin:4px 0 12px" id="verify-url"></p>
+      <button type="button" class="secondary" id="copy-verify">Copy verifier link</button>
+    </div>
+  </section>
+
+  <footer>
+    ReportAnchor contract on Stellar testnet<br>
+    <a href="https://github.com/Inferara/stablecoin-close">Source</a>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@17.2.1/dist/stellar-sdk.min.js"
+        integrity="sha384-z72iOjWW+lhGmZrU900uVQX76pdHCbGOL7YyFgTd/mzXLbHQtQuUrxGOfETZJM/D"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@6.0.1/build/index.min.js"
+        integrity="sha384-PBwq0JVfqy16Z6jvKJPx93jpStXbwF2oWvsRTODkvE/3hOX5zmLvAuMiKgAaxe2b"
+        crossorigin="anonymous"></script>
+<script src="../shared/soroban.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

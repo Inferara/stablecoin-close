@@ -110,29 +110,11 @@
     }
   }
 
-  async function freighter() {
-    const f = window.freighterApi;
-    if (!f) throw new Error("The Freighter library did not load. Reload the page.");
-    const c = await f.isConnected();
-    if (!c || !c.isConnected) {
-      throw new Error("Freighter is not installed. Install the Freighter browser extension (freighter.app) and reload.");
-    }
-    return f;
-  }
-
   async function connect() {
     showError("");
     $("connect").disabled = true;
     try {
-      const f = await freighter();
-      const access = await f.requestAccess();
-      if (access.error) throw new Error(access.error.message || String(access.error));
-      const details = await f.getNetworkDetails();
-      if (details.error) throw new Error(details.error.message || String(details.error));
-      if (details.networkPassphrase !== X.net.passphrase) {
-        throw new Error("Freighter is on another network. Switch it to Testnet and try again.");
-      }
-      wallet = access.address;
+      wallet = await X.connectFreighter();
       $("wallet-line").hidden = false;
       $("wallet-line").textContent = `Wallet ${X.shortAddr(wallet)}`;
       $("connect").hidden = true;
@@ -159,41 +141,20 @@
     const label = btn.textContent;
     btn.disabled = true;
     try {
-      const f = await freighter();
       btn.textContent = "Preparing…";
-      let account;
-      try {
-        account = await X.server.getAccount(wallet);
-      } catch (e) {
-        throw new Error("This wallet account does not exist on testnet yet. Fund it with Friendbot first.");
-      }
-      const tx = X.buildCall(account, contractId, "pay_invoice", [
+      const prepared = await X.prepareCall(wallet, contractId, "pay_invoice", [
         new S.Address(wallet).toScVal(),
         X.bytes32(hash),
       ]);
-      const prepared = await X.server.prepareTransaction(tx);
-
-      btn.textContent = "Confirm in Freighter…";
-      const signed = await f.signTransaction(prepared.toXDR(), {
-        networkPassphrase: X.net.passphrase,
-        address: wallet,
+      const done = await X.signAndSubmit(prepared, wallet, (step) => {
+        btn.textContent = step === "sign" ? "Confirm in Freighter…" : "Sending…";
       });
-      if (signed.error) throw new Error(signed.error.message || String(signed.error));
-
-      btn.textContent = "Sending…";
-      const signedTx = S.TransactionBuilder.fromXDR(signed.signedTxXdr, X.net.passphrase);
-      const sent = await X.server.sendTransaction(signedTx);
-      if (sent.status === "ERROR") throw new Error("The network rejected the transaction.");
-      const done = await X.waitFor(sent.hash);
-      if (done.status !== S.rpc.Api.GetTransactionStatus.SUCCESS) {
-        throw new Error(`The transaction failed (${done.status}).`);
-      }
 
       $("invoice").hidden = true;
       $("success").hidden = false;
       $("success-text").textContent =
         `${invoice.invoice_number}: ${X.formatUnits(invoice.amount, asset.decimals)} ${asset.code} paid in ledger ${done.ledger}.`;
-      $("success-link").href = `${X.net.explorer}/tx/${sent.hash}`;
+      $("success-link").href = `${X.net.explorer}/tx/${done.hash}`;
     } catch (e) {
       showError(friendly(e));
       btn.textContent = label;

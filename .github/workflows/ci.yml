@@ -8,22 +8,28 @@ on:
 permissions:
   contents: read
 
+# Third-party actions are pinned to full commit SHAs (tag in the comment).
 jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32v1-none
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install the pinned Rust toolchain (rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
       - name: Unit tests
         run: cargo test --locked
-      - uses: stellar/stellar-cli@v28.1.0
+      - uses: stellar/stellar-cli@c0f4d0da891bbf214c08b8c5035ae6db80e9a3bd # v28.1.0
       - name: Build wasm
         run: stellar contract build --locked
-      - name: Wasm artifacts exist
-        run: ls -l target/wasm32v1-none/release/invoice_settlement.wasm target/wasm32v1-none/release/report_anchor.wasm
+      - name: Wasm matches the testnet deployment
+        run: |
+          for c in invoice_settlement report_anchor; do
+            want=$(jq -r ".wasm_sha256.$c" deployments/testnet.json)
+            got=$(sha256sum target/wasm32v1-none/release/$c.wasm | cut -d' ' -f1)
+            echo "$c: built $got, deployed $want"
+            [ "$got" = "$want" ]
+          done
 
   fetcher:
     runs-on: ubuntu-latest
@@ -31,8 +37,8 @@ jobs:
       run:
         working-directory: tools/fetcher
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm

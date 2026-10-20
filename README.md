@@ -82,6 +82,9 @@ companies by a hash the company chooses.
 | `status(invoice_hash)` | none | `Open` or `Paid { payer, ledger, timestamp }`. |
 | `get_invoice(invoice_hash)` | none | Everything registered, plus the status (what the payer page shows). |
 
+Errors: `#1` unknown invoice, `#2` hash already registered, `#3` already paid,
+`#4` amount not positive, `#5` empty invoice number.
+
 The payer never passes an asset or an amount: `pay_invoice` uses the registered
 ones, so a wrong asset or a wrong amount cannot happen rather than being detected.
 A late payment is accepted (`due` is informational), because refusing it would only
@@ -95,22 +98,36 @@ transfer fails, the whole transaction reverts and it stays open.
 
 `invoice_registered` is published on registration with the same topic layout.
 
-**`invoice_hash`** is the SHA-256 of a canonical reference string:
+**`invoice_hash`** is the SHA-256 of a canonical reference string that starts
+with a secret salt:
 
 ```
-<company_id>|<invoice_number>|<amount in stroops>|<asset contract id>
+<salt>|<company_id>|<invoice_number>|<amount in stroops>|<asset contract id>
 ```
 
-for example `lisbon-coffee-roasters|INV-DEMO-0001|125000000|CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`
-hashes to `c02573388eba7ca1bc4104f3d06b4d94bb2aa07c364f7b1454d618ae2a9f1528`.
-Amounts are in the asset's smallest unit (7 decimals for Stellar assets). No
-customer name or other personal data goes into it. The contract cannot recompute
-the hash (it never sees `company_id`); the merchant's books do, which is what ties
-an event back to an invoice.
+The salt is a random value only the merchant (its books) knows. It never goes on
+chain or into a link. Without it, a company id and sequential invoice numbers are
+easy to guess, and someone could compute an invoice's hash and register it first
+with themselves as the merchant. Amounts are in the asset's smallest unit (7
+decimals for Stellar assets). No customer name or other personal data goes into
+the string. The contract cannot recompute the hash; the merchant's books can, which
+is what ties an `invoice_paid` event back to an invoice.
+
+Worked example (the salt here is made up for the example; it is checked by a unit
+test):
 
 ```sh
-printf '%s' 'lisbon-coffee-roasters|INV-DEMO-0001|125000000|CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA' | sha256sum
+printf '%s' 'example-salt-do-not-use|lisbon-coffee-roasters|INV-1001|12000000000|CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA' | sha256sum
+# 4d6fde0e27fdb232a88e98a58f17a61b4b0909881935a3b21975294d0936d569
 ```
+
+A payment link carries the invoice hash **and the merchant's address**
+(`&merchant=G…`); the payer page refuses to pay when the registered merchant is a
+different address. That also covers a leaked salt.
+
+Haruno, or any other reader, should only match an `invoice_paid` event whose `asset`
+is a Stellar Asset Contract it expects (for example Circle's USDC), since a merchant
+can register an invoice in any token.
 
 ### ReportAnchor
 
@@ -118,9 +135,24 @@ printf '%s' 'lisbon-coffee-roasters|INV-DEMO-0001|125000000|CBIELTK6YBZJU5UP2WWQ
 |---|---|---|
 | `anchor(signer, company_id_hash, period, report_sha256)` | signer | Records the hash with the signer, ledger and time. `period` is `YYYY-MM`. One anchor per company and period: a second call is refused, whatever its hash. |
 | `get(company_id_hash, period)` | none | `Option<{ report_sha256, signer, ledger, timestamp }>` |
+| `owner(company_id_hash)` | none | `Option<Address>`: who may anchor this company's periods |
+| `transfer_owner(company_id_hash, new_owner)` | current owner | Hands the company to another signer. Earlier anchors keep their signer. |
+
+Errors: `#1` period already anchored, `#2` period not `YYYY-MM`, `#3` not the
+company's owner, `#4` unknown company (for `transfer_owner`).
 
 Event `anchored`: topics `[Symbol("anchored"), BytesN<32>(company_id_hash), String(period)]`,
-data map `{ report_sha256, signer }`.
+data map `{ report_sha256, signer }`. Event `owner_changed`: topics
+`[Symbol("owner_changed"), BytesN<32>(company_id_hash)]`, data map `{ new_owner, old_owner }`.
+
+**Owner binding.** The first anchor of a company makes its signer the company's
+owner, and only the owner can anchor later periods. A company id hash is public
+after its first anchor (it is an event topic and part of every verifier link), so
+without this anyone could anchor the company's next months first with junk. To
+change reviewer, the owner calls `transfer_owner`; if the owner's key is lost,
+there is no recovery in this version, and the company continues under a new
+`company_id_hash` (a new salt). A smart-account owner (passkeys, several signers)
+avoids that and is the planned next step.
 
 `company_id_hash` should be salted (for example SHA-256 of `<secret salt>|<company id>`)
 so that nobody can find a company's anchors by guessing its id. A correction to an
@@ -131,33 +163,51 @@ Anchoring is meant to be signed by the reviewer's own wallet, not by a key Harun
 
 | Contract | Id |
 |---|---|
-| InvoiceSettlement | [`CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ`](https://stellar.expert/explorer/testnet/contract/CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ) |
-| ReportAnchor | [`CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3`](https://stellar.expert/explorer/testnet/contract/CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3) |
+| InvoiceSettlement | [`CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4`](https://stellar.expert/explorer/testnet/contract/CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4) |
+| ReportAnchor | [`CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN`](https://stellar.expert/explorer/testnet/contract/CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN) |
 
-Built with soroban-sdk 29.0.1 and stellar-cli 28.1.0. Testnet is reset from time
-to time; after a reset the ids change and `deployments/testnet.json` is updated.
+Built with Rust 1.95.0 (pinned in `rust-toolchain.toml`), soroban-sdk 29.0.1 and
+stellar-cli 28.1.0; `stellar contract build --locked` reproduces the wasm hashes in
+`deployments/testnet.json`, and CI checks that. Both contracts extend their own
+instance and code lifetime on every call, and were extended to the network maximum
+after deployment: without further calls they stay live until about ledger 8,408,000
+(mid-April 2027). Testnet is reset from time to time; after a reset the ids change
+and `deployments/testnet.json` is updated. Two earlier deployments from 2026-10-20
+(`CB6J7M…MVQQ`, `CCMJRX…MOU3`) are superseded and not used by the pages.
 
 Round trip run on testnet on 2026-10-20 with Circle's testnet USDC
-(SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`):
+(SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`); the demo invoices
+use a salt that is not published:
 
-- `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/cd6601ed5159d5f429e931c47cc591d69fa906ae6263daf6240025c41aedb564); a second payment was refused with `Error(Contract, #3)` (already paid).
+- `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/a2b4b4b449e4bd3fc8ba40a12255fbe52e3413a1d9203c4ff9ab784a4f515596)
+  with a transaction built by the payer page and signed outside it.
 - `INV-DEMO-0003`, 5.00 USDC: left open for trying the payer page:
-  [`pages/payer/?invoice=4a96924aec788b739406b0700520e992169048e5aa058fa4a4015a029fbf4303`](pages/payer/?invoice=4a96924aec788b739406b0700520e992169048e5aa058fa4a4015a029fbf4303)
-- [`pages/verifier/sample-report.pdf`](pages/verifier/sample-report.pdf) is [anchored](https://stellar.expert/explorer/testnet/tx/a4313f4aa861009c5aeef62465e15a8e7d31d1653ef0e592e6ed4f4e87a070ba)
+  [`pages/payer/?invoice=4d5fd849…&merchant=GB4SLT…`](pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G)
+- [`pages/verifier/sample-report.pdf`](pages/verifier/sample-report.pdf) is [anchored](https://stellar.expert/explorer/testnet/tx/aaa75f8a8080891a3fe1e3c8d83b2342efec94889d18c67c62cfe560e5844f99)
   for period `2026-09`; the verifier page's "Try it with a sample report" link checks it.
+  Anchoring `2026-10` for the same company from another account was refused with
+  `Error(Contract, #3)`.
 
 ## Pages
 
 Plain HTML and JavaScript, no build step. They talk to Soroban RPC
 (`https://soroban-testnet.stellar.org`) directly from the browser and load
 `@stellar/stellar-sdk@17.2.1` and `@stellar/freighter-api@6.0.1` from jsDelivr
-with subresource integrity.
+with subresource integrity. Signing is done with Freighter for now; signing with a
+passkey smart account is the next step.
 
-- **Payer** — `pages/payer/?invoice=<hash>[&contract=<id>]`. Shows the invoice number,
-  amount, asset, merchant and due date; connects [Freighter](https://freighter.app)
-  (set to Testnet); checks the wallet's balance; builds `pay_invoice`, simulates it,
-  asks Freighter to sign, submits, and shows a success screen with a StellarExpert
-  link. A paid invoice shows who paid and when. The wallet needs a USDC trustline.
+- **Payer** — `pages/payer/?invoice=<hash>&merchant=<G… address>[&contract=<id>]`.
+  Shows the invoice number, amount, asset (with its contract id), merchant and due
+  date; connects [Freighter](https://freighter.app) (set to Testnet); checks the
+  wallet's balance; builds `pay_invoice`, simulates it, asks Freighter to sign,
+  submits, and shows a success screen with a StellarExpert link. A paid invoice shows
+  who paid and when. The wallet needs a USDC trustline. The page offers no Pay button
+  when the link names no merchant or a merchant other than the registered one, when
+  `contract` is not the InvoiceSettlement deployed here, or when the asset is not one
+  it knows (USDC and EURC on testnet; a token's own name is not trusted). Before asking
+  Freighter to sign, it checks the simulated transaction: one `pay_invoice` call for
+  this invoice from your wallet, authorizing exactly one transfer of the shown amount
+  of the shown asset to the shown merchant, and nothing else.
 - **Anchor (sign-off)** — opened by Haruno when a close is signed off; see the URL
   contract below. Shows the period and the two hashes (shortened, with copy buttons)
   and the contract; connects Freighter, builds `anchor(signer, company_id_hash, period,
@@ -165,6 +215,8 @@ with subresource integrity.
   and ends on a success screen with the transaction link and a ready verifier link for
   that company and period. If the period is already anchored it shows that anchor
   instead, and whether it matches the given report hash, and offers nothing to sign.
+  When the company already has an owner and the connected wallet is someone else, it
+  says which wallet signs for the company instead of offering to sign.
 - **Verifier** — `pages/verifier/?company=<company_id_hash>&period=<YYYY-MM>[&contract=<id>]`.
   Drop a PDF (or tap to pick one); it is hashed in the browser with WebCrypto and
   never uploaded. The page shows "Matches the anchored report", "Does not match" or
@@ -181,7 +233,7 @@ pages/anchor/?company=<company_id_hash>&period=<YYYY-MM>&report=<report_sha256>&
 | `company` | yes | 64 hex characters: the company id hash, used as given |
 | `period` | yes | `YYYY-MM`, month 01-12 |
 | `report` | yes | 64 hex characters: SHA-256 of the report PDF |
-| `contract` | no | a `C…` contract id; defaults to the testnet ReportAnchor above |
+| `contract` | no | a `C…` contract id; defaults to the testnet ReportAnchor above, and any other id is shown with a warning |
 | `network` | no | `testnet` (the only one supported); anything else is refused |
 
 Every parameter is checked before anything is shown; an invalid link lists what is
@@ -194,7 +246,7 @@ Run them locally from the repository root:
 
 ```sh
 python -m http.server 8000
-# http://localhost:8000/pages/payer/?invoice=4a96924aec788b739406b0700520e992169048e5aa058fa4a4015a029fbf4303
+# http://localhost:8000/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G
 # http://localhost:8000/pages/verifier/
 # http://localhost:8000/pages/anchor/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09&report=f9103bbedcc8c3732c6184f94ef9a4fcb1d929d8517443e58df80594fc872a39
 ```

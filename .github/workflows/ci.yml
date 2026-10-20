@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+      - name: Unit tests
+        run: cargo test --locked
+      - uses: stellar/stellar-cli@v28.1.0
+      - name: Build wasm
+        run: stellar contract build --locked
+      - name: Wasm artifacts exist
+        run: ls -l target/wasm32v1-none/release/invoice_settlement.wasm target/wasm32v1-none/release/report_anchor.wasm
+
+  fetcher:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/fetcher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/fetcher/package-lock.json
+      - run: npm ci
+      - run: npm test

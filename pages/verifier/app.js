@@ -15,8 +15,10 @@
 
   $("contract-id").textContent = X.shortAddr(contractId);
   const network = X.param("network") || "testnet";
-  if (network !== "testnet") {
-    $("error").textContent = `The network "${network}" is not supported here; only testnet is.`;
+  // Shown instead of "no error" for as long as the page is on this link.
+  const linkError = network === "testnet" ? "" : `The network "${network}" is not supported here; only testnet is.`;
+  if (linkError) {
+    $("error").textContent = linkError;
     $("error").hidden = false;
     $("check").disabled = true;
   }
@@ -49,7 +51,7 @@
   }
 
   async function takeFile(file) {
-    showError("");
+    showError(linkError);
     clearResult();
     if (!file) return;
     fileName = file.name;
@@ -61,14 +63,15 @@
   }
 
   function ready() {
-    return fileHash && X.isHash($("company").value.trim()) && /^\d{4}-\d{2}$/.test($("period").value);
+    return !linkError && fileHash && X.isHash($("company").value.trim()) && /^\d{4}-\d{2}$/.test($("period").value);
   }
 
   async function check() {
-    showError("");
+    showError(linkError);
     clearResult();
     const company = $("company").value.trim().toLowerCase();
     const period = $("period").value;
+    if (linkError) return showError(linkError);
     if (!fileHash) return showError("Choose the report PDF first.");
     if (!X.isHash(company)) return showError("The company ID hash should be 64 hex characters.");
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return showError("Choose the period (year and month).");
@@ -89,10 +92,10 @@
       const anchored = X.bytesToHex(anchor.report_sha256);
       if (anchored === fileHash) {
         showResult("ok", "Matches the anchored report",
-          `${fileName} is exactly the report anchored for ${period}.`);
+          `${fileName} is exactly the report anchored for ${period}, signed by ${anchor.signer}.`);
       } else {
         showResult("bad", "Does not match",
-          `${fileName} is not the report anchored for ${period}. It may have been changed, or it is a different file.`);
+          `${fileName} is not the report anchored for ${period} by ${anchor.signer}. It may have been changed, or it is a different file.`);
       }
       $("details").hidden = false;
       $("d-time").textContent = X.formatTime(anchor.timestamp);

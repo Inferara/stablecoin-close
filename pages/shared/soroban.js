@@ -14,8 +14,19 @@
 
   // Contracts deployed by this repository (deployments/testnet.json).
   const DEFAULT_CONTRACTS = {
-    invoice_settlement: "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
-    report_anchor: "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3",
+    invoice_settlement: "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4",
+    report_anchor: "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN",
+  };
+
+  // Stellar Asset Contracts the pages know by name. An asset's own symbol()
+  // is not trusted for display: any contract can call itself "USDC".
+  const KNOWN_ASSETS = {
+    CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA: {
+      code: "USDC", decimals: 7, issuer: "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+    },
+    CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ: {
+      code: "EURC", decimals: 7, issuer: "GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO",
+    },
   };
 
   // Reads need a transaction to simulate, and a transaction needs a source
@@ -41,6 +52,10 @@
 
   function isContractId(s) {
     return typeof s === "string" && /^C[A-Z2-7]{55}$/.test(s) && S.StrKey.isValidContract(s);
+  }
+
+  function isAccountId(s) {
+    return typeof s === "string" && /^G[A-Z2-7]{55}$/.test(s) && S.StrKey.isValidEd25519PublicKey(s);
   }
 
   function isHash(s) {
@@ -95,16 +110,20 @@
     }
   }
 
-  // Finds the transaction that emitted an event in a known ledger. The RPC
-  // keeps events for about a week on testnet; older ones return null.
-  async function findEventTx(contractId, topics, ledger) {
+  // Finds the transaction that emitted an event in a known ledger: the first
+  // event in exactly that ledger whose topics match and, when `match` is
+  // given, whose data passes it. The RPC keeps events for about a week on
+  // testnet; older ones return null.
+  async function findEventTx(contractId, topics, ledger, match) {
     try {
       const res = await server.getEvents({
         startLedger: Number(ledger),
         filters: [{ type: "contract", contractIds: [contractId], topics: [topics] }],
         limit: 100,
       });
-      const ev = res.events && res.events[res.events.length - 1];
+      const ev = (res.events || []).find(
+        (e) => e.ledger === Number(ledger) && (!match || match(S.scValToNative(e.value))),
+      );
       return ev ? { txHash: ev.txHash, ledger: ev.ledger } : null;
     } catch (e) {
       return null;
@@ -176,6 +195,72 @@
     return { hash: sent.hash, ledger: done.ledger };
   }
 
+  // --- Checking what a prepared transaction asks the wallet to sign ---
+
+  // stellar-sdk 17 decodes XDR into plain objects (properties, not the
+  // accessor methods of earlier versions).
+  function symbolText(name) {
+    if (typeof name === "string") return name;
+    const bytes = name && name.bytes !== undefined ? name.bytes : name;
+    return bytes instanceof Uint8Array ? new TextDecoder().decode(bytes) : String(bytes);
+  }
+
+  function describeContractCall(args) {
+    return {
+      contract: S.Address.fromScAddress(args.contractAddress).toString(),
+      fn: symbolText(args.functionName),
+      args: args.args.map((v) => S.scValToNative(v)),
+    };
+  }
+
+  function sameValue(a, b) {
+    if (a instanceof Uint8Array || b instanceof Uint8Array) {
+      return typeof a === "object" && typeof b === "object" && bytesToHex(a) === bytesToHex(b);
+    }
+    return typeof a === "bigint" || typeof b === "bigint" ? BigInt(a) === BigInt(b) : a === b;
+  }
+
+  function sameCall(call, want) {
+    return call.contract === want.contract && call.fn === want.fn &&
+      call.args.length === want.args.length && call.args.every((v, i) => sameValue(v, want.args[i]));
+  }
+
+  // Throws unless `prepared` is exactly one call of `want.call`, from `source`,
+  // whose only authorization is that call with exactly `want.subCalls` under it
+  // (each with nothing further below). `want.call` and `want.subCalls[i]` are
+  // { contract, fn, args } with args as native values (bytes as Uint8Array).
+  function checkAuthTree(prepared, source, want) {
+    const fail = (why) => { throw new Error(`Refusing to sign: ${why}.`); };
+    if (prepared.source !== source) fail("the transaction is not sent from your wallet");
+    if (prepared.operations.length !== 1) fail("the transaction contains more than one operation");
+    const op = prepared.operations[0];
+    if (op.type !== "invokeHostFunction" || !op.func || op.func.type !== "hostFunctionTypeInvokeContract") {
+      fail("the transaction is not a contract call");
+    }
+    if (!sameCall(describeContractCall(op.func.invokeContract), want.call)) fail("the transaction calls something else");
+    const auth = op.auth || [];
+    if (auth.length !== 1) fail(`the transaction asks for ${auth.length} authorizations instead of one`);
+    const cred = auth[0].credentials;
+    if (cred.type === "sorobanCredentialsAddress") {
+      if (S.Address.fromScAddress(cred.address.address).toString() !== source) fail("the authorization is for another account");
+    } else if (cred.type !== "sorobanCredentialsSourceAccount") {
+      fail("the authorization has unknown credentials");
+    }
+    const contractFn = (inv) => {
+      if (inv.function.type !== "sorobanAuthorizedFunctionTypeContractFn") fail("the authorization covers a non-call");
+      return describeContractCall(inv.function.contractFn);
+    };
+    const root = auth[0].rootInvocation;
+    if (!sameCall(contractFn(root), want.call)) fail("the authorization is for another call");
+    const subs = root.subInvocations;
+    if (subs.length !== want.subCalls.length) fail("the authorization covers more than expected");
+    subs.forEach((sub, k) => {
+      if (!sameCall(contractFn(sub), want.subCalls[k]) || sub.subInvocations.length !== 0) {
+        fail("the authorization would move funds differently from what is shown");
+      }
+    });
+  }
+
   // Copies text and briefly confirms on the button.
   function copyButton(button, text) {
     button.addEventListener("click", async () => {
@@ -232,8 +317,8 @@
   }
 
   window.Soroban = {
-    S, net, server, DEFAULT_CONTRACTS, ContractError, contractErrorCode,
-    isContractId, isHash, bytes32, hexToBytes, bytesToHex, buildCall, read, waitFor,
-    findEventTx, connectFreighter, prepareCall, signAndSubmit, copyButton, topicSymbol, topicString, topicBytes, shortAddr, formatUnits, formatTime, param,
+    S, net, server, DEFAULT_CONTRACTS, KNOWN_ASSETS, ContractError, contractErrorCode,
+    isContractId, isAccountId, isHash, bytes32, hexToBytes, bytesToHex, buildCall, read, waitFor,
+    findEventTx, connectFreighter, prepareCall, signAndSubmit, checkAuthTree, copyButton, topicSymbol, topicString, topicBytes, shortAddr, formatUnits, formatTime, param,
   };
 })();

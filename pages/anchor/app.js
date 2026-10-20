@@ -20,6 +20,9 @@
   const contractId = raw.contract;
   let wallet = null;
 
+  // Errors of ReportAnchor (contracts/report-anchor/src/lib.rs).
+  const NOT_OWNER = 3;
+
   function problems() {
     const out = [];
     if (raw.network !== "testnet") out.push(`The network "${raw.network}" is not supported here; only testnet is.`);
@@ -102,6 +105,10 @@
     $("r-report").title = report;
     $("r-company").textContent = short(company);
     $("r-company").title = company;
+    if (contractId !== X.DEFAULT_CONTRACTS.report_anchor) {
+      $("warning").textContent = `This link names contract ${contractId}, not the published ReportAnchor. Sign only if you expected that.`;
+      $("warning").hidden = false;
+    }
     $("r-contract").textContent = X.shortAddr(contractId);
     $("r-contract").href = `${X.net.explorer}/contract/${contractId}`;
     X.copyButton($("copy-report"), () => report);
@@ -131,6 +138,12 @@
       wallet = await X.connectFreighter();
       $("wallet-line").hidden = false;
       $("wallet-line").textContent = `Signing as ${X.shortAddr(wallet)}`;
+      const owner = await X.read(contractId, "owner", [X.bytes32(company)]);
+      if (owner && owner !== wallet) {
+        showError(`This company's anchors are signed by ${owner}. Connect that wallet to sign off.`);
+        $("connect").disabled = false;
+        return;
+      }
       $("connect").hidden = true;
       $("sign").hidden = false;
     } catch (e) {
@@ -152,6 +165,14 @@
         S.nativeToScVal(period, { type: "string" }),
         X.bytes32(report),
       ]);
+      X.checkAuthTree(prepared, wallet, {
+        call: {
+          contract: contractId,
+          fn: "anchor",
+          args: [wallet, X.hexToBytes(company), period, X.hexToBytes(report)],
+        },
+        subCalls: [],
+      });
       const done = await X.signAndSubmit(prepared, wallet, (step) => {
         btn.textContent = step === "sign" ? "Confirm in Freighter…" : "Sending…";
       });
@@ -164,7 +185,11 @@
         const anchor = await readAnchor().catch(() => null);
         if (anchor) return showExisting(anchor);
       }
-      showError(e instanceof X.ContractError ? `The contract refused the anchor (error #${e.code}).` : networkMessage(e));
+      showError(e instanceof X.ContractError
+        ? e.code === NOT_OWNER
+          ? "This company's anchors are signed by another wallet. Connect that wallet to sign off."
+          : `The contract refused the anchor (error #${e.code}).`
+        : networkMessage(e));
       btn.textContent = label;
       btn.disabled = false;
     }

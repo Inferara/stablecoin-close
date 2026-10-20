@@ -3,23 +3,30 @@
   "network_passphrase": "Test SDF Network ; September 2015",
   "rpc_url": "https://soroban-testnet.stellar.org",
   "deployed_at": "2026-10-20",
+  "rust": "1.95.0",
   "soroban_sdk": "29.0.1",
+  "stellar_cli": "28.1.0",
   "contracts": {
-    "invoice_settlement": "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
-    "report_anchor": "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3"
+    "invoice_settlement": "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4",
+    "report_anchor": "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN"
   },
+  "wasm_sha256": {
+    "invoice_settlement": "c6c4cd210bdb4d227e018ab4a2c0e0baaef678ad1552c3618ea63c0615d95066",
+    "report_anchor": "fe9984a42bc1612a1bf942ff7660fca47dc2bc457c6139e986b0823748e49d05"
+  },
+  "live_until_ledger": 8408086,
   "assets": {
     "USDC": {
       "issuer": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
       "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
     },
     "EURC": {
-      "issuer": "GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO"
+      "issuer": "GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO",
+      "contract": "CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ"
     }
   },
-  "stellar_cli": "28.1.0",
-  "wasm_sha256": {
-    "invoice_settlement": "c42dd3754e6e08d571f6c360578a84479629f120797cce8789f5016ecebdefc9",
-    "report_anchor": "f3e774cf3c468e7a7bb2ca2f65e3f377fa7bbb78a5749240fb234ccd996d1e66"
+  "superseded": {
+    "invoice_settlement": "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
+    "report_anchor": "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3"
   }
 }

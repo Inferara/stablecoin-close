@@ -9,13 +9,18 @@
     3: "This invoice has already been paid.",
   };
 
+  // Only the InvoiceSettlement this repository deployed (deployments/).
+  const KNOWN_CONTRACTS = [X.DEFAULT_CONTRACTS.invoice_settlement];
+
   const contractId = X.param("contract") || X.DEFAULT_CONTRACTS.invoice_settlement;
   const hash = (X.param("invoice") || "").toLowerCase();
+  const expectedMerchant = X.param("merchant") || "";
   let invoice = null; // as read from the contract
-  let asset = { code: "", decimals: 7 };
+  let asset = null; // from KNOWN_ASSETS
   let wallet = null; // connected address
 
   $("contract-id").textContent = X.shortAddr(contractId);
+  $("contract-id").title = contractId;
 
   function showError(msg) {
     const el = $("error");
@@ -29,14 +34,16 @@
     if (code !== null && ERRORS[code]) return ERRORS[code];
     const msg = String((e && e.message) || e);
     if (/insufficient|balance is not sufficient|#10\b/i.test(msg)) return "Your wallet does not hold enough of this asset.";
-    if (/trustline|#13\b/i.test(msg)) return `Your wallet has no trustline for ${asset.code || "this asset"} yet. Add it in your wallet first.`;
-    if (/Failed to fetch|NetworkError|network/i.test(msg)) return "The Stellar network could not be reached. Check your connection and try again.";
+    if (/trustline|#13\b/i.test(msg)) return `Your wallet has no trustline for ${(asset && asset.code) || "this asset"} yet. Add it in your wallet first.`;
+    if (/Failed to fetch|NetworkError/i.test(msg)) return "The Stellar network could not be reached. Check your connection and try again.";
     return msg;
   }
 
   async function load() {
-    if (!X.isContractId(contractId)) {
-      showError("The link names an invalid contract.");
+    if (!KNOWN_CONTRACTS.includes(contractId)) {
+      showError(X.isContractId(contractId)
+        ? `Do not pay: this link points at contract ${contractId}, which is not the published InvoiceSettlement contract.`
+        : "The link names an invalid contract.");
       return;
     }
     if (!hash) {
@@ -51,15 +58,7 @@
     $("loading").hidden = false;
     try {
       invoice = await X.read(contractId, "get_invoice", [X.bytes32(hash)]);
-      try {
-        const [code, decimals] = await Promise.all([
-          X.read(invoice.asset, "symbol", []),
-          X.read(invoice.asset, "decimals", []),
-        ]);
-        asset = { code: String(code), decimals: Number(decimals) };
-      } catch (e) {
-        asset = { code: X.shortAddr(invoice.asset), decimals: 7 };
-      }
+      asset = X.KNOWN_ASSETS[invoice.asset] || null;
       render();
     } catch (e) {
       showError(friendly(e));
@@ -68,11 +67,29 @@
     }
   }
 
+  // Why this invoice must not be paid from this page, or null.
+  function refusal() {
+    if (!asset) {
+      return `Do not pay: the invoice asks for an asset this page does not know (contract ${invoice.asset}).`;
+    }
+    if (!expectedMerchant) {
+      return "This payment link is incomplete: it does not say who should be paid. Ask the merchant for the full link.";
+    }
+    if (!X.isAccountId(expectedMerchant)) {
+      return "This payment link names an invalid merchant address.";
+    }
+    if (invoice.merchant !== expectedMerchant) {
+      return `Do not pay: this invoice pays ${invoice.merchant}, not the merchant named in your link (${expectedMerchant}).`;
+    }
+    return null;
+  }
+
   function render() {
+    const decimals = asset ? asset.decimals : 7;
     $("invoice").hidden = false;
     $("inv-number").textContent = invoice.invoice_number;
-    $("inv-amount").textContent = X.formatUnits(invoice.amount, asset.decimals);
-    $("inv-code").textContent = asset.code;
+    $("inv-amount").textContent = X.formatUnits(invoice.amount, decimals);
+    $("inv-code").textContent = asset ? asset.code : "of an unknown asset";
     $("inv-merchant").textContent = X.shortAddr(invoice.merchant);
     $("inv-merchant").title = invoice.merchant;
     $("inv-asset").innerHTML = "";
@@ -80,7 +97,9 @@
     a.href = `${X.net.explorer}/contract/${invoice.asset}`;
     a.target = "_blank";
     a.rel = "noopener";
-    a.textContent = `${asset.code} (${X.shortAddr(invoice.asset)})`;
+    a.className = "mono";
+    a.textContent = `${asset ? asset.code : "Unknown"} ${X.shortAddr(invoice.asset)}`;
+    a.title = invoice.asset;
     $("inv-asset").append(a);
     $("inv-due").textContent = new Date(Number(invoice.due) * 1000).toLocaleDateString(undefined, {
       year: "numeric", month: "long", day: "numeric",
@@ -98,16 +117,31 @@
       $("paid-ledger").textContent = String(paid.ledger);
       $("paid-time").textContent = X.formatTime(paid.timestamp);
       $("paid-link").href = `${X.net.explorer}/contract/${contractId}`;
-      X.findEventTx(contractId, [X.topicSymbol("invoice_paid"), X.topicString(invoice.invoice_number)], paid.ledger)
+      X.findEventTx(contractId, [X.topicSymbol("invoice_paid"), X.topicString(invoice.invoice_number)], paid.ledger,
+        (data) => X.bytesToHex(data.invoice_hash) === hash)
         .then((ev) => {
           if (ev) $("paid-link").href = `${X.net.explorer}/tx/${ev.txHash}`;
         });
-    } else {
-      pill.textContent = "Open";
-      pill.className = "pill open";
-      $("pay-card").hidden = false;
-      $("pay").textContent = `Pay ${X.formatUnits(invoice.amount, asset.decimals)} ${asset.code}`;
+      return;
     }
+    pill.textContent = "Open";
+    pill.className = "pill open";
+    const why = refusal();
+    if (why) {
+      showError(why);
+      return;
+    }
+    $("pay-card").hidden = false;
+    $("pay").textContent = `Pay ${X.formatUnits(invoice.amount, asset.decimals)} ${asset.code}`;
+  }
+
+  // The only thing the page lets the wallet sign: this invoice's pay_invoice,
+  // authorizing just the transfer of the shown amount to the shown merchant.
+  function expectedPayment() {
+    return {
+      call: { contract: contractId, fn: "pay_invoice", args: [wallet, X.hexToBytes(hash)] },
+      subCalls: [{ contract: invoice.asset, fn: "transfer", args: [wallet, invoice.merchant, BigInt(invoice.amount)] }],
+    };
   }
 
   async function connect() {
@@ -146,6 +180,7 @@
         new S.Address(wallet).toScVal(),
         X.bytes32(hash),
       ]);
+      X.checkAuthTree(prepared, wallet, expectedPayment());
       const done = await X.signAndSubmit(prepared, wallet, (step) => {
         btn.textContent = step === "sign" ? "Confirm in Freighter…" : "Sending…";
       });

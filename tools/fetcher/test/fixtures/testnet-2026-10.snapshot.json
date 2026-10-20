@@ -1,7 +1,7 @@
 {
   "format": "haruno.stellar.month/1",
   "month": "2026-10",
-  "fetched_at": "2026-10-20T16:09:06Z",
+  "fetched_at": "2026-10-20T17:22:29Z",
   "company": "lisbon-coffee-roasters",
   "reporting_currency": "USD",
   "source": {
@@ -30,7 +30,7 @@
             "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
           },
           "opening": "0.0000000",
-          "closing": "9779.7345580",
+          "closing": "9662.8012499",
           "caveat": null,
           "movements": [
             {
@@ -469,6 +469,120 @@
                 "jpy": "0",
                 "source": "unpriced;unpriced-jpy"
               }
+            },
+            {
+              "tx_hash": "96453a818bd6c94f24baac1265afcb4f29b4807f562b1c9b1eab7505a70e4605",
+              "op_index": 0,
+              "time": "2026-10-20T17:19:32Z",
+              "direction": "out",
+              "amount": "4.4774851",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "aac1cb3707a7de7b5e0631993b01be79c9c31ce7a756659ff348d42dc6c68877",
+              "op_index": 0,
+              "time": "2026-10-20T17:19:52Z",
+              "direction": "out",
+              "amount": "0.0087870",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "5713fcaae6718a2788118b39de9ee3de8e9bdae1762a7516a978e50b566b1236",
+              "op_index": 0,
+              "time": "2026-10-20T17:20:17Z",
+              "direction": "out",
+              "amount": "0.2056580",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "72646c2de2e65c4bf235031c9b848ca4f13ead9b7adec3f6a5cd74ba1dcf8539",
+              "op_index": 0,
+              "time": "2026-10-20T17:20:27Z",
+              "direction": "out",
+              "amount": "110.5961030",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "4c34110606ce6a9c4c2d8d71b8a22780b8b471d5b8c898d9c51cd5c720ca87ce",
+              "op_index": 0,
+              "time": "2026-10-20T17:20:37Z",
+              "direction": "out",
+              "amount": "0.8226375",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "a761a14d117115b841c4ab787d2c47bb162e8beca63ca5214471d74ed749bbec",
+              "op_index": 0,
+              "time": "2026-10-20T17:20:42Z",
+              "direction": "out",
+              "amount": "0.8226375",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
             }
           ]
         },
@@ -479,7 +593,7 @@
             "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
           },
           "opening": "0.0000000",
-          "closing": "30.0000000",
+          "closing": "42.5000000",
           "caveat": null,
           "movements": [
             {
@@ -531,6 +645,25 @@
               "internal": true,
               "kind": "sac_transfer",
               "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "158.13",
+                "source": "par;frankfurter.dev 2026-10-20"
+              }
+            },
+            {
+              "tx_hash": "bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2",
+              "op_index": 0,
+              "time": "2026-10-20T17:21:52Z",
+              "direction": "in",
+              "amount": "12.5000000",
+              "counterparty": "GCNWK6IDAWJVBTASSSE62CB2UWO4QIYRCPN5MM3EQLSSPZZ6IYKJTQIL",
+              "counterparty_wallet": "w-2",
+              "internal": true,
+              "kind": "sac_transfer",
+              "memo": null,
               "invoice_ref": "INV-DEMO-0001",
               "invoice_ref_source": "contract",
               "rate": {
@@ -559,7 +692,7 @@
             "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
           },
           "opening": "0.0000000",
-          "closing": "9899.1955637",
+          "closing": "9898.9314847",
           "caveat": null,
           "movements": [
             {
@@ -694,6 +827,25 @@
                 "jpy": "0",
                 "source": "unpriced;unpriced-jpy"
               }
+            },
+            {
+              "tx_hash": "bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2",
+              "op_index": 0,
+              "time": "2026-10-20T17:21:52Z",
+              "direction": "out",
+              "amount": "0.2640790",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
             }
           ]
         },
@@ -704,7 +856,7 @@
             "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
           },
           "opening": "0.0000000",
-          "closing": "58.1426867",
+          "closing": "45.6426867",
           "caveat": null,
           "movements": [
             {
@@ -768,6 +920,25 @@
               "tx_hash": "a2b4b4b449e4bd3fc8ba40a12255fbe52e3413a1d9203c4ff9ab784a4f515596",
               "op_index": 0,
               "time": "2026-10-20T16:06:02Z",
+              "direction": "out",
+              "amount": "12.5000000",
+              "counterparty": "GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G",
+              "counterparty_wallet": "w-1",
+              "internal": true,
+              "kind": "sac_transfer",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "158.13",
+                "source": "par;frankfurter.dev 2026-10-20"
+              }
+            },
+            {
+              "tx_hash": "bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2",
+              "op_index": 0,
+              "time": "2026-10-20T17:21:52Z",
               "direction": "out",
               "amount": "12.5000000",
               "counterparty": "GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G",

@@ -6,12 +6,13 @@
   "rust": "1.95.0",
   "soroban_sdk": "29.0.1",
   "stellar_cli": "28.1.0",
+  "built_on": "x86_64-unknown-linux-gnu (GitHub Actions ubuntu-latest, as CI builds it)",
   "contracts": {
-    "invoice_settlement": "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4",
+    "invoice_settlement": "CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU",
     "report_anchor": "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN"
   },
   "wasm_sha256": {
-    "invoice_settlement": "c6c4cd210bdb4d227e018ab4a2c0e0baaef678ad1552c3618ea63c0615d95066",
+    "invoice_settlement": "86d840d2698f469ff65d9fc7b5fd0ababe000272317a7f76cab97734c2d67cc4",
     "report_anchor": "fe9984a42bc1612a1bf942ff7660fca47dc2bc457c6139e986b0823748e49d05"
   },
   "live_until_ledger": 8408086,
@@ -26,7 +27,12 @@
     }
   },
   "superseded": {
-    "invoice_settlement": "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
-    "report_anchor": "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3"
+    "invoice_settlement": [
+      "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
+      "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4"
+    ],
+    "report_anchor": [
+      "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3"
+    ]
   }
 }

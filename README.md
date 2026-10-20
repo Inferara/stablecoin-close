@@ -163,23 +163,26 @@ Anchoring is meant to be signed by the reviewer's own wallet, not by a key Harun
 
 | Contract | Id |
 |---|---|
-| InvoiceSettlement | [`CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4`](https://stellar.expert/explorer/testnet/contract/CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4) |
+| InvoiceSettlement | [`CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU`](https://stellar.expert/explorer/testnet/contract/CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU) |
 | ReportAnchor | [`CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN`](https://stellar.expert/explorer/testnet/contract/CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN) |
 
 Built with Rust 1.95.0 (pinned in `rust-toolchain.toml`), soroban-sdk 29.0.1 and
-stellar-cli 28.1.0; `stellar contract build --locked` reproduces the wasm hashes in
-`deployments/testnet.json`, and CI checks that. Both contracts extend their own
+stellar-cli 28.1.0. The deployed code is reproducible on Linux x86_64 as CI builds it:
+`stellar contract build --locked` there gives the wasm hashes in
+`deployments/testnet.json`, and every CI run checks that. (A build on another host OS
+can order a few internal functions differently and so hash differently, with the same
+behavior.) Both contracts extend their own
 instance and code lifetime on every call, and were extended to the network maximum
 after deployment: without further calls they stay live until about ledger 8,408,000
 (mid-April 2027). Testnet is reset from time to time; after a reset the ids change
-and `deployments/testnet.json` is updated. Two earlier deployments from 2026-10-20
-(`CB6J7M…MVQQ`, `CCMJRX…MOU3`) are superseded and not used by the pages.
+and `deployments/testnet.json` is updated. Earlier deployments from 2026-10-20
+(`CB6J7M…MVQQ`, `CAQYJW…43M4`, `CCMJRX…MOU3`) are superseded and not used by the pages.
 
 Round trip run on testnet on 2026-10-20 with Circle's testnet USDC
 (SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`); the demo invoices
 use a salt that is not published:
 
-- `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/a2b4b4b449e4bd3fc8ba40a12255fbe52e3413a1d9203c4ff9ab784a4f515596)
+- `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2)
   with a transaction built by the payer page and signed outside it.
 - `INV-DEMO-0003`, 5.00 USDC: left open for trying the payer page:
   [`pages/payer/?invoice=4d5fd849…&merchant=GB4SLT…`](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G)

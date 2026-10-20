@@ -8,8 +8,11 @@
 //! something the contract has to detect.
 //!
 //! Nothing personal is stored on chain. The invoice is identified by
-//! `invoice_hash`, the SHA-256 of a canonical reference string (see the README),
-//! and by the invoice number the merchant chose to publish.
+//! `invoice_hash`, the SHA-256 of a canonical reference string that starts with
+//! a secret salt only the merchant knows (see the README), and by the invoice
+//! number the merchant chose to publish. The salt is what stops anyone else
+//! from computing an invoice's hash and registering it first, with themselves
+//! as the merchant.
 #![no_std]
 
 use soroban_sdk::{
@@ -101,8 +104,9 @@ pub struct InvoiceRegistered {
     pub invoice_hash: BytesN<32>,
 }
 
-// Roughly 30 days at 5-second ledgers: an entry read or written is kept alive
-// at least this long, and topped up to the network maximum.
+// Roughly 30 days at 5-second ledgers: the contract instance (and its code)
+// and every entry read or written are kept alive at least this long, and
+// topped up to the network maximum, on every call.
 const TTL_THRESHOLD: u32 = 518_400;
 
 #[contract]
@@ -122,6 +126,7 @@ impl InvoiceSettlement {
         due: u64,
     ) {
         merchant.require_auth();
+        bump_instance(&env);
         if amount <= 0 {
             panic_with_error!(&env, Error::InvalidAmount);
         }
@@ -156,6 +161,7 @@ impl InvoiceSettlement {
     /// asset from `payer` to the merchant and marks the invoice paid.
     pub fn pay_invoice(env: Env, payer: Address, invoice_hash: BytesN<32>) {
         payer.require_auth();
+        bump_instance(&env);
         let key = DataKey::Invoice(invoice_hash.clone());
         let mut invoice = load(&env, &key);
         if invoice.status != Status::Open {
@@ -189,11 +195,13 @@ impl InvoiceSettlement {
 
     /// The invoice's status: `Open`, or `Paid` with the payer and ledger.
     pub fn status(env: Env, invoice_hash: BytesN<32>) -> Status {
+        bump_instance(&env);
         load(&env, &DataKey::Invoice(invoice_hash)).status
     }
 
     /// The whole registered invoice, for a payer page to show before paying.
     pub fn get_invoice(env: Env, invoice_hash: BytesN<32>) -> Invoice {
+        bump_instance(&env);
         load(&env, &DataKey::Invoice(invoice_hash))
     }
 }
@@ -211,6 +219,13 @@ fn load(env: &Env, key: &DataKey) -> Invoice {
 fn save(env: &Env, key: &DataKey, invoice: &Invoice) {
     env.storage().persistent().set(key, invoice);
     extend(env, key);
+}
+
+fn bump_instance(env: &Env) {
+    let max = env.storage().max_ttl();
+    env.storage()
+        .instance()
+        .extend_ttl(TTL_THRESHOLD.min(max), max);
 }
 
 fn extend(env: &Env, key: &DataKey) {

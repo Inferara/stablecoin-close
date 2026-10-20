@@ -2,7 +2,10 @@ extern crate std;
 
 use super::*;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events as _, Ledger as _},
+    testutils::{
+        storage::{Instance as _, Persistent as _},
+        Address as _, AuthorizedFunction, AuthorizedInvocation, Events as _, Ledger as _,
+    },
     xdr::{self, ScVal},
     IntoVal, Symbol, TryFromVal, Val,
 };
@@ -125,7 +128,7 @@ fn second_anchor_for_the_same_period_is_refused() {
     let someone = Address::generate(&s.env);
     assert_eq!(
         s.client.try_anchor(&someone, &s.company, &s.period, &other),
-        Err(Ok(Error::AlreadyAnchored.into()))
+        Err(Ok(Error::NotOwner.into()))
     );
     assert_eq!(
         s.client.get(&s.company, &s.period).unwrap().report_sha256,
@@ -195,4 +198,119 @@ fn anchored_event_has_the_documented_shape() {
             ),
         ]
     );
+}
+
+#[test]
+fn the_first_anchor_binds_the_company_to_its_signer() {
+    let s = setup();
+    assert_eq!(s.client.owner(&s.company), None);
+    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
+    assert_eq!(s.client.owner(&s.company), Some(s.signer.clone()));
+
+    // The owner anchors the next month.
+    let next = String::from_str(&s.env, "2026-11");
+    s.client.anchor(&s.signer, &s.company, &next, &s.report);
+
+    // Nobody else can take a later month of the same company.
+    let squatter = Address::generate(&s.env);
+    let later = String::from_str(&s.env, "2026-12");
+    assert_eq!(
+        s.client
+            .try_anchor(&squatter, &s.company, &later, &s.report),
+        Err(Ok(Error::NotOwner.into()))
+    );
+    assert_eq!(s.client.get(&s.company, &later), None);
+
+    // Another company is unaffected: its first signer becomes its owner.
+    let other_company = BytesN::from_array(&s.env, &[2u8; 32]);
+    s.client
+        .anchor(&squatter, &other_company, &later, &s.report);
+    assert_eq!(s.client.owner(&other_company), Some(squatter));
+}
+
+#[test]
+fn the_owner_can_hand_the_company_over() {
+    let s = setup();
+    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
+    let successor = Address::generate(&s.env);
+    s.client.transfer_owner(&s.company, &successor);
+    assert_eq!(
+        s.env.auths(),
+        std::vec![(
+            s.signer.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    s.contract.clone(),
+                    Symbol::new(&s.env, "transfer_owner"),
+                    (s.company.clone(), successor.clone()).into_val(&s.env),
+                )),
+                sub_invocations: std::vec![],
+            }
+        )]
+    );
+    assert_eq!(s.client.owner(&s.company), Some(successor.clone()));
+
+    let next = String::from_str(&s.env, "2026-11");
+    assert_eq!(
+        s.client.try_anchor(&s.signer, &s.company, &next, &s.report),
+        Err(Ok(Error::NotOwner.into()))
+    );
+    s.client.anchor(&successor, &s.company, &next, &s.report);
+    // The earlier anchor keeps its original signer.
+    assert_eq!(
+        s.client.get(&s.company, &s.period).unwrap().signer,
+        s.signer
+    );
+}
+
+#[test]
+fn only_the_owner_can_hand_the_company_over() {
+    let s = setup();
+    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
+    s.env.set_auths(&[]);
+    let thief = Address::generate(&s.env);
+    assert!(s.client.try_transfer_owner(&s.company, &thief).is_err());
+    assert_eq!(s.client.owner(&s.company), Some(s.signer.clone()));
+}
+
+#[test]
+fn handing_over_an_unknown_company_is_refused() {
+    let s = setup();
+    let someone = Address::generate(&s.env);
+    assert_eq!(
+        s.client.try_transfer_owner(&s.company, &someone),
+        Err(Ok(Error::UnknownCompany.into()))
+    );
+}
+
+#[test]
+fn every_call_keeps_the_instance_and_entries_alive() {
+    let s = setup();
+    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
+    let (max, instance, anchor, owner) = s.env.as_contract(&s.contract, || {
+        (
+            s.env.storage().max_ttl(),
+            s.env.storage().instance().get_ttl(),
+            s.env
+                .storage()
+                .persistent()
+                .get_ttl(&DataKey::Anchor(s.company.clone(), s.period.clone())),
+            s.env
+                .storage()
+                .persistent()
+                .get_ttl(&DataKey::Owner(s.company.clone())),
+        )
+    });
+    assert_eq!((instance, anchor, owner), (max, max, max));
+
+    // Once the remaining TTL falls below the threshold (about 30 days), a
+    // read alone tops the instance up to the maximum again.
+    s.env
+        .ledger()
+        .with_mut(|l| l.sequence_number += max - TTL_THRESHOLD + 1);
+    s.client.get(&s.company, &s.period);
+    let instance = s
+        .env
+        .as_contract(&s.contract, || s.env.storage().instance().get_ttl());
+    assert_eq!(instance, max);
 }

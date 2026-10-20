@@ -2,10 +2,13 @@ extern crate std;
 
 use super::*;
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Events as _, Ledger as _},
+    testutils::{
+        storage::{Instance as _, Persistent as _},
+        Address as _, AuthorizedFunction, AuthorizedInvocation, Events as _, Ledger as _,
+    },
     token::{StellarAssetClient, TokenClient},
     xdr::{self, ScVal},
-    IntoVal, Symbol, TryFromVal, Val,
+    Bytes, IntoVal, Symbol, TryFromVal, Val,
 };
 
 const AMOUNT: i128 = 1_200_0000000; // 1,200.0000000 in stroops
@@ -314,5 +317,54 @@ fn invoice_paid_event_has_the_agreed_shape() {
                 sc(&s.env, s.payer.clone())
             ),
         ]
+    );
+}
+
+#[test]
+fn every_call_keeps_the_instance_and_the_invoice_alive() {
+    let s = setup();
+    register(&s);
+    s.client.pay_invoice(&s.payer, &s.hash);
+    let (max, instance, entry) = s.env.as_contract(&s.contract, || {
+        (
+            s.env.storage().max_ttl(),
+            s.env.storage().instance().get_ttl(),
+            s.env
+                .storage()
+                .persistent()
+                .get_ttl(&DataKey::Invoice(s.hash.clone())),
+        )
+    });
+    assert_eq!((instance, entry), (max, max));
+
+    // Once the remaining TTL falls below the threshold, a read alone tops the
+    // instance up to the maximum again.
+    s.env
+        .ledger()
+        .with_mut(|l| l.sequence_number += max - TTL_THRESHOLD + 1);
+    s.client.status(&s.hash);
+    let instance = s
+        .env
+        .as_contract(&s.contract, || s.env.storage().instance().get_ttl());
+    assert_eq!(instance, max);
+}
+
+/// The README's worked example of the invoice hash recipe:
+/// sha256("<salt>|<company_id>|<invoice_number>|<amount in stroops>|<asset contract id>").
+#[test]
+fn readme_invoice_hash_example() {
+    let env = Env::default();
+    let reference = "example-salt-do-not-use|lisbon-coffee-roasters|INV-1001|12000000000|CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA";
+    let hash: BytesN<32> = env
+        .crypto()
+        .sha256(&Bytes::from_slice(&env, reference.as_bytes()))
+        .into();
+    let mut hex = std::string::String::new();
+    for b in hash.to_array() {
+        hex.push_str(&std::format!("{b:02x}"));
+    }
+    assert_eq!(
+        hex,
+        "4d6fde0e27fdb232a88e98a58f17a61b4b0909881935a3b21975294d0936d569"
     );
 }

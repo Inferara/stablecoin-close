@@ -320,33 +320,38 @@ fn invoice_paid_event_has_the_agreed_shape() {
     );
 }
 
-#[test]
-fn every_call_keeps_the_instance_and_the_invoice_alive() {
-    let s = setup();
-    register(&s);
-    s.client.pay_invoice(&s.payer, &s.hash);
-    let (max, instance, entry) = s.env.as_contract(&s.contract, || {
+fn ttls(s: &Setup) -> (u32, u32) {
+    s.env.as_contract(&s.contract, || {
         (
-            s.env.storage().max_ttl(),
             s.env.storage().instance().get_ttl(),
             s.env
                 .storage()
                 .persistent()
                 .get_ttl(&DataKey::Invoice(s.hash.clone())),
         )
-    });
-    assert_eq!((instance, entry), (max, max));
+    })
+}
 
-    // Once the remaining TTL falls below the threshold, a read alone tops the
-    // instance up to the maximum again.
+#[test]
+fn entries_are_kept_alive_for_a_bounded_time() {
+    let s = setup();
+    register(&s);
+    // A new invoice, and the instance, live about 30 days, not the network
+    // maximum: rent is paid for that time.
+    assert_eq!(ttls(&s), (KEEP, KEEP));
+    assert!(KEEP < s.env.as_contract(&s.contract, || s.env.storage().max_ttl()));
+
+    // While more than TOP_UP is left, a call extends nothing.
+    s.env.ledger().with_mut(|l| l.sequence_number += 1_000);
+    s.client.pay_invoice(&s.payer, &s.hash);
+    assert_eq!(ttls(&s), (KEEP - 1_000, KEEP - 1_000));
+
+    // Below TOP_UP, a read alone extends them to KEEP again.
     s.env
         .ledger()
-        .with_mut(|l| l.sequence_number += max - TTL_THRESHOLD + 1);
+        .with_mut(|l| l.sequence_number += KEEP - 1_000 - TOP_UP + 1);
     s.client.status(&s.hash);
-    let instance = s
-        .env
-        .as_contract(&s.contract, || s.env.storage().instance().get_ttl());
-    assert_eq!(instance, max);
+    assert_eq!(ttls(&s), (KEEP, KEEP));
 }
 
 /// The README's worked example of the invoice hash recipe:

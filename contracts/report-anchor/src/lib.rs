@@ -81,10 +81,15 @@ pub struct OwnerChanged {
     pub new_owner: Address,
 }
 
-// Roughly 30 days at 5-second ledgers: the contract instance (and its code)
-// and every entry read or written are kept alive at least this long, and
-// topped up to the network maximum, on every call.
-const TTL_THRESHOLD: u32 = 518_400;
+// Storage lifetimes, in ledgers (about 5 seconds each). Rent is paid for the
+// time an entry is kept alive, and on a busy network it is expensive, so the
+// contract keeps entries alive for a bounded time, not the network maximum: an
+// entry read or written with less than TOP_UP (about 7 days) left is extended
+// to KEEP (about 30 days). Most calls therefore extend nothing. Anyone can
+// extend an entry further with an ExtendFootprintTTL operation, and an entry
+// that does expire is archived, not deleted, and can be restored.
+const KEEP: u32 = 518_400;
+const TOP_UP: u32 = 120_960;
 
 #[contract]
 pub struct ReportAnchor;
@@ -196,17 +201,15 @@ fn is_month(period: &String) -> bool {
 }
 
 fn bump_instance(env: &Env) {
-    let max = env.storage().max_ttl();
-    env.storage()
-        .instance()
-        .extend_ttl(TTL_THRESHOLD.min(max), max);
+    let keep = KEEP.min(env.storage().max_ttl());
+    env.storage().instance().extend_ttl(TOP_UP.min(keep), keep);
 }
 
 fn extend(env: &Env, key: &DataKey) {
-    let max = env.storage().max_ttl();
+    let keep = KEEP.min(env.storage().max_ttl());
     env.storage()
         .persistent()
-        .extend_ttl(key, TTL_THRESHOLD.min(max), max);
+        .extend_ttl(key, TOP_UP.min(keep), keep);
 }
 
 #[cfg(test)]

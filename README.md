@@ -6,6 +6,24 @@ two Soroban contracts, the two public web pages that go with them, the
 
 Built for HackMeridian 2026 (Scale track).
 
+## For judges: five minutes
+
+| | |
+|---|---|
+| Demo video | _added with the submission on Oct 26_ |
+| Pitch deck (PDF) | _added with the submission on Oct 26_ |
+| What changed at the event | [compare `pre-hackmeridian...main`](https://github.com/Inferara/stablecoin-close/compare/pre-hackmeridian...main), and [Built at HackMeridian](#built-at-hackmeridian-october-25-26) below |
+
+Try it in the browser; nothing to install:
+
+1. **RWA values on mainnet.** Open the [RWA values page](https://inferara.github.io/stablecoin-close/pages/rwa/): Stellar's tokenised funds, bonds and gold, each valued from the issuer's NAV on chain or its stated NAV, with the DEX price beside it.
+2. **Pay an invoice.** Open the [open demo invoice](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G) (5.00 USDC on testnet). It shows the invoice without a wallet (once someone has paid it, who paid and when); paying needs [Freighter](https://freighter.app) on Testnet with test USDC.
+3. **Verify a closed month.** Open the [verifier for September 2026](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09) and click "Try it with a sample report": the PDF is hashed in your browser and checked against the hash anchored on testnet.
+
+In code: the two contracts in [`contracts/`](contracts/) (`cargo test`), the snapshot format in
+[`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md), and the fetcher in
+[`tools/fetcher`](tools/fetcher/) (`npm test`, no network needed).
+
 ## The problem
 
 A company that is paid in stablecoins (USDC, EURC) on Stellar, often into several

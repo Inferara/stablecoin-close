@@ -17,7 +17,7 @@ Built for HackMeridian 2026 (Scale track).
 Try it in the browser; nothing to install:
 
 1. **RWA values on mainnet.** Open the [RWA values page](https://inferara.github.io/stablecoin-close/pages/rwa/): Stellar's tokenised funds, bonds and gold, each valued from the issuer's NAV on chain or its stated NAV, with the DEX price beside it.
-2. **Pay an invoice.** Open the [open demo invoice](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G) (5.00 USDC on testnet). It shows the invoice without a wallet (once someone has paid it, who paid and when); paying needs [Freighter](https://freighter.app) on Testnet with test USDC.
+2. **Pay an invoice.** Open the [open demo invoice](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=14743a09ff3744e5b12f7736e02e9627a520f8a442100d2359371bde2de44e39&merchant=GD2HID4AHAGP3ELHAROKJU4PAHZT2PCTBIDODI5MWPDFPKDMBAAZJH4Q) (5.00 USDC on testnet). It shows the invoice without a wallet (once someone has paid it, who paid and when); paying needs [Freighter](https://freighter.app) on Testnet with test USDC.
 3. **Verify a closed month.** Open the [verifier for September 2026](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09) and click "Try it with a sample report": the PDF is hashed in your browser and checked against the hash anchored on testnet.
 
 In code: the two contracts in [`contracts/`](contracts/) (`cargo test`), the snapshot format in
@@ -46,6 +46,7 @@ the parts anyone can use or check without Haruno:
 | [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
+| [`tools/deploy`](tools/deploy/bin/deploy.mjs) | Uploads, deploys and extends the contracts on testnet with fee-bump transactions. |
 | [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm, and the USDT0 stablecoin): what each is, and where a real value for it comes from. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
 
@@ -183,34 +184,58 @@ Anchoring is meant to be signed by the reviewer's own wallet, not by a key Harun
 
 | Contract | Id |
 |---|---|
-| InvoiceSettlement | [`CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU`](https://stellar.expert/explorer/testnet/contract/CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU) |
-| ReportAnchor | [`CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN`](https://stellar.expert/explorer/testnet/contract/CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN) |
+| InvoiceSettlement | [`CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB`](https://stellar.expert/explorer/testnet/contract/CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB) |
+| ReportAnchor | [`CAU56RULWM446LJCYIRMWIJSBL4NE5DBLTHJ4GPXTKUVQ7BUYTQAZ2CS`](https://stellar.expert/explorer/testnet/contract/CAU56RULWM446LJCYIRMWIJSBL4NE5DBLTHJ4GPXTKUVQ7BUYTQAZ2CS) |
 
 Built with Rust 1.95.0 (pinned in `rust-toolchain.toml`), soroban-sdk 29.0.1 and
 stellar-cli 28.1.0. The deployed code is reproducible on Linux x86_64 as CI builds it:
 `stellar contract build --locked` there gives the wasm hashes in
 `deployments/testnet.json`, and every CI run checks that. (A build on another host OS
 can order a few internal functions differently and so hash differently, with the same
-behavior.) Both contracts extend their own
-instance and code lifetime on every call, and were extended to the network maximum
-after deployment: without further calls they stay live until about ledger 8,408,000
-(mid-April 2027). Testnet is reset from time to time; after a reset the ids change
-and `deployments/testnet.json` is updated. Earlier deployments from 2026-10-20
-(`CB6J7M…MVQQ`, `CAQYJW…43M4`, `CCMJRX…MOU3`) are superseded and not used by the pages.
+behavior.)
 
-Round trip run on testnet on 2026-10-20 with Circle's testnet USDC
+**Storage lifetime and rent.** Rent is paid for the time a ledger entry is kept alive.
+An invoice, anchor or owner entry, and the contract instance with its code, that is
+read or written with less than about 7 days left is extended to about 30 days; most
+calls extend nothing. Anyone can extend an entry further with an `ExtendFootprintTTL`
+operation, and an entry that expires is archived, not deleted, and can be restored.
+On testnet on 2026-10-25 a new invoice cost about 70 XLM in rent and fees, and a
+company's first anchor about 89 XLM. (The first deployment extended everything to the
+network maximum, about 6 months. That made the same calls 400 and 510 XLM, and the
+second was over the most a transaction fee can be, so it could not be submitted at all.)
+
+The instance and code were extended to about ledger 5,902,900 (around November 24, 2026).
+At today's testnet rent, extending code costs thousands of XLM, more than a plain
+transaction can pay, so they must be extended with
+[`tools/deploy`](tools/deploy/bin/deploy.mjs) (fee-bump transactions) before about
+November 17, when calls would otherwise start to extend them themselves:
+
+```sh
+cd tools/deploy && npm ci
+node bin/deploy.mjs --key <stellar CLI key> --extend CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB --extend CAU56RULWM446LJCYIRMWIJSBL4NE5DBLTHJ4GPXTKUVQ7BUYTQAZ2CS
+```
+
+Testnet is reset from time to time; after a reset the ids change and
+`deployments/testnet.json` is updated. Superseded deployments are listed there. The one
+before this, from 2026-10-20 (`CAXZMH…RCBU`, `CDHTWZ…MOAN`), stays live until April 2027;
+the payer page still accepts invoices registered on its InvoiceSettlement.
+
+Round trip on testnet on 2026-10-25 with Circle's testnet USDC
 (SAC `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA`); the demo invoices
 use a salt that is not published:
 
-- `INV-DEMO-0001`, 12.50 USDC: registered, then [paid](https://stellar.expert/explorer/testnet/tx/bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2)
-  with a transaction built by the payer page and signed outside it.
-- `INV-DEMO-0003`, 5.00 USDC: left open for trying the payer page:
-  [`pages/payer/?invoice=4d5fd849…&merchant=GB4SLT…`](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G)
-- [`pages/verifier/sample-report.pdf`](pages/verifier/sample-report.pdf) is [anchored](https://stellar.expert/explorer/testnet/tx/aaa75f8a8080891a3fe1e3c8d83b2342efec94889d18c67c62cfe560e5844f99)
+- `INV-DEMO-0004`, 5.00 USDC, [registered](https://stellar.expert/explorer/testnet/tx/9013a2fd8bf835ba5d5d37be299f3873c57654115f9857788f898a2c6fc1e120)
+  by a demo merchant that is not one of the demo company's wallets, and left open for
+  trying the payer page:
+  [`pages/payer/?invoice=14743a09…&merchant=GD2HID…`](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=14743a09ff3744e5b12f7736e02e9627a520f8a442100d2359371bde2de44e39&merchant=GD2HID4AHAGP3ELHAROKJU4PAHZT2PCTBIDODI5MWPDFPKDMBAAZJH4Q)
+- [`pages/verifier/sample-report.pdf`](pages/verifier/sample-report.pdf) is [anchored](https://stellar.expert/explorer/testnet/tx/0b8674609c73bad2f74ccf6ba33214c4c490127449b4d139273ba0fab9383d84)
   for period `2026-09`; the [verifier page](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09)'s
-  "Try it with a sample report" link checks it.
-  Anchoring `2026-10` for the same company from another account was refused with
-  `Error(Contract, #3)`.
+  "Try it with a sample report" link checks it. Anchoring `2026-10` for the same
+  company from another account simulates to `Error(Contract, #3)`.
+
+The first deployment's round trip on 2026-10-20 (INV-DEMO-0001
+[paid](https://stellar.expert/explorer/testnet/tx/bdf187262e9a5720d0e13140b4d1b45a274a1ec0d57041e3dd9c6e8a503a85e2)
+from a transaction the payer page built) is on the superseded InvoiceSettlement.
 
 ## Pages
 
@@ -229,7 +254,7 @@ Plain HTML and JavaScript, no build step. They talk to Soroban RPC
 with subresource integrity. Signing is done with Freighter for now; signing with a
 passkey smart account is the next step.
 
-- **Payer** — `pages/payer/?invoice=<hash>&merchant=<G… address>` (only the InvoiceSettlement contract published in `deployments/testnet.json` is accepted).
+- **Payer** — `pages/payer/?invoice=<hash>&merchant=<G… address>` (only the InvoiceSettlement contracts published in `deployments/testnet.json` are accepted: the current one and the one before it).
   Shows the invoice number, amount, asset (with its contract id), merchant and due
   date; connects [Freighter](https://freighter.app) (set to Testnet); checks the
   wallet's balance; builds `pay_invoice`, simulates it, asks Freighter to sign,
@@ -279,7 +304,7 @@ Run them locally from the repository root:
 
 ```sh
 python -m http.server 8000
-# http://localhost:8000/pages/payer/?invoice=4d5fd8498453b1bae76299b2f36462209cb7072069878d580b73345b4fbd5e69&merchant=GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G
+# http://localhost:8000/pages/payer/?invoice=14743a09ff3744e5b12f7736e02e9627a520f8a442100d2359371bde2de44e39&merchant=GD2HID4AHAGP3ELHAROKJU4PAHZT2PCTBIDODI5MWPDFPKDMBAAZJH4Q
 # http://localhost:8000/pages/verifier/
 # http://localhost:8000/pages/anchor/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09&report=f9103bbedcc8c3732c6184f94ef9a4fcb1d929d8517443e58df80594fc872a39
 ```
@@ -341,12 +366,19 @@ Requirements: Rust with the `wasm32v1-none` target, [stellar-cli](https://github
 ```sh
 cargo test                      # contract unit tests
 stellar contract build          # target/wasm32v1-none/release/*.wasm
+```
 
+To deploy on testnet, use the wasm CI publishes (the `contracts-wasm` artifact of a CI
+run), so the hashes match `deployments/testnet.json`. Uploading code there now costs
+more than a plain transaction's fee can be, so `tools/deploy` sends fee-bump
+transactions. A friendbot account holds 10,000 XLM; on 2026-10-25 the two uploads, two
+deployments and two 30-day extensions took about 20,400 XLM, so merge a few funded
+accounts into the deployer first:
+
+```sh
 stellar keys generate deployer --network testnet --fund
-stellar contract deploy --wasm target/wasm32v1-none/release/invoice_settlement.wasm \
-  --source-account deployer --network testnet --alias invoice_settlement
-stellar contract deploy --wasm target/wasm32v1-none/release/report_anchor.wasm \
-  --source-account deployer --network testnet --alias report_anchor
+cd tools/deploy && npm ci
+node bin/deploy.mjs --key deployer --wasm-dir <unzipped contracts-wasm>
 ```
 
 Keys stay in the stellar CLI's own configuration or in your wallet. None belongs in
@@ -393,6 +425,13 @@ Listed here as the work lands; the compare link above shows every change.
   RedStone's NAV beside its DEX price 1.4% lower, BENJI and WTGX at their stated 1.00
   NAV with RedStone's BENJI feed as a check, the Etherfuse stablebonds, XAUm, and USDT0
   at par. USDT0 joins the registry as a `stablecoin` valued at `par`.
+- **Oct 25: contracts redeployed with a bounded storage lifetime.** Staging the demo
+  showed that testnet rent had made the contracts unusable: both extended every entry
+  to the network maximum, so a new invoice cost 400 XLM and a new company's first
+  anchor 510 XLM, more than a transaction fee can be. They now keep entries about 30
+  days (70 and 89 XLM on the same day), and were redeployed with fee-bump
+  transactions from [`tools/deploy`](tools/deploy/bin/deploy.mjs). The pages, the demo
+  invoice and the sample anchor moved to the new contracts.
 
 Parts of this repository were written with AI coding assistants.
 

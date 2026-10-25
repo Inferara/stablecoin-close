@@ -14,8 +14,8 @@
 
   // Contracts deployed by this repository (deployments/testnet.json).
   const DEFAULT_CONTRACTS = {
-    invoice_settlement: "CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU",
-    report_anchor: "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN",
+    invoice_settlement: "CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB",
+    report_anchor: "CAU56RULWM446LJCYIRMWIJSBL4NE5DBLTHJ4GPXTKUVQ7BUYTQAZ2CS",
   };
 
   // Stellar Asset Contracts the pages know by name. An asset's own symbol()

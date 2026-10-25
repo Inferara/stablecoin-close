@@ -9,8 +9,13 @@
     3: "This invoice has already been paid.",
   };
 
-  // Only the InvoiceSettlement this repository deployed (deployments/).
-  const KNOWN_CONTRACTS = [X.DEFAULT_CONTRACTS.invoice_settlement];
+  // Only the InvoiceSettlement this repository deployed (deployments/): the
+  // current one, and the previous one, which is still live for invoices
+  // registered there before 2026-10-25.
+  const KNOWN_CONTRACTS = [
+    X.DEFAULT_CONTRACTS.invoice_settlement,
+    "CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU",
+  ];
 
   const contractId = X.param("contract") || X.DEFAULT_CONTRACTS.invoice_settlement;
   const hash = (X.param("invoice") || "").toLowerCase();

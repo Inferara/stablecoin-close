@@ -283,13 +283,9 @@ fn handing_over_an_unknown_company_is_refused() {
     );
 }
 
-#[test]
-fn every_call_keeps_the_instance_and_entries_alive() {
-    let s = setup();
-    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
-    let (max, instance, anchor, owner) = s.env.as_contract(&s.contract, || {
+fn ttls(s: &Setup) -> (u32, u32, u32) {
+    s.env.as_contract(&s.contract, || {
         (
-            s.env.storage().max_ttl(),
             s.env.storage().instance().get_ttl(),
             s.env
                 .storage()
@@ -300,17 +296,29 @@ fn every_call_keeps_the_instance_and_entries_alive() {
                 .persistent()
                 .get_ttl(&DataKey::Owner(s.company.clone())),
         )
-    });
-    assert_eq!((instance, anchor, owner), (max, max, max));
+    })
+}
 
-    // Once the remaining TTL falls below the threshold (about 30 days), a
-    // read alone tops the instance up to the maximum again.
+#[test]
+fn entries_are_kept_alive_for_a_bounded_time() {
+    let s = setup();
+    s.client.anchor(&s.signer, &s.company, &s.period, &s.report);
+    // A new anchor and owner, and the instance, live about 30 days, not the
+    // network maximum: rent is paid for that time.
+    assert_eq!(ttls(&s), (KEEP, KEEP, KEEP));
+    assert!(KEEP < s.env.as_contract(&s.contract, || s.env.storage().max_ttl()));
+
+    // While more than TOP_UP is left, a call extends nothing.
+    s.env.ledger().with_mut(|l| l.sequence_number += 1_000);
+    s.client.get(&s.company, &s.period);
+    assert_eq!(ttls(&s), (KEEP - 1_000, KEEP - 1_000, KEEP - 1_000));
+
+    // Below TOP_UP, a read alone extends what it touches to KEEP again.
     s.env
         .ledger()
-        .with_mut(|l| l.sequence_number += max - TTL_THRESHOLD + 1);
+        .with_mut(|l| l.sequence_number += KEEP - 1_000 - TOP_UP + 1);
     s.client.get(&s.company, &s.period);
-    let instance = s
-        .env
-        .as_contract(&s.contract, || s.env.storage().instance().get_ttl());
-    assert_eq!(instance, max);
+    let (instance, anchor, owner) = ttls(&s);
+    assert_eq!((instance, anchor), (KEEP, KEEP));
+    assert_eq!(owner, TOP_UP - 1);
 }

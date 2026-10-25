@@ -2,20 +2,20 @@
   "network": "testnet",
   "network_passphrase": "Test SDF Network ; September 2015",
   "rpc_url": "https://soroban-testnet.stellar.org",
-  "deployed_at": "2026-10-20",
+  "deployed_at": "2026-10-25",
   "rust": "1.95.0",
   "soroban_sdk": "29.0.1",
   "stellar_cli": "28.1.0",
   "built_on": "x86_64-unknown-linux-gnu (GitHub Actions ubuntu-latest, as CI builds it)",
   "contracts": {
-    "invoice_settlement": "CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU",
-    "report_anchor": "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN"
+    "invoice_settlement": "CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB",
+    "report_anchor": "CAU56RULWM446LJCYIRMWIJSBL4NE5DBLTHJ4GPXTKUVQ7BUYTQAZ2CS"
   },
   "wasm_sha256": {
-    "invoice_settlement": "86d840d2698f469ff65d9fc7b5fd0ababe000272317a7f76cab97734c2d67cc4",
-    "report_anchor": "fe9984a42bc1612a1bf942ff7660fca47dc2bc457c6139e986b0823748e49d05"
+    "invoice_settlement": "495f7e7c45f0569a92ccf6def33fa2eb3557b1fb94e13c80eb81be1cf2cd517c",
+    "report_anchor": "dfd32e0929ad165c650ec5c48eaf19a2085aa416d4020eb6e30acd24d6d31786"
   },
-  "live_until_ledger": 8408086,
+  "live_until_ledger": 5902900,
   "assets": {
     "USDC": {
       "issuer": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
@@ -29,10 +29,12 @@
   "superseded": {
     "invoice_settlement": [
       "CB6J7MWCEJD5A4MR2Z2NSISUDIOZG7R76CDFIPP7R5CKJVBWNAAGMVQQ",
-      "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4"
+      "CAQYJWSOIQRYGZPPQDKBTUTJBKBO3F7BW6BVNVTGTWJIMSDSLLKO43M4",
+      "CAXZMHYBDMMZB2DGHQRN4RRBNOC557NNP5A54GFTNVGBJDHVIDEERCBU"
     ],
     "report_anchor": [
-      "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3"
+      "CCMJRXZN3JZQCDPMA3MMQ4LKYEDAWM6CR2C6R5OFNKFVUGI6LVXKMOU3",
+      "CDHTWZXASJ4MDG6RM5M6H2ANNRDZADSC522QH5I5GEM4WDESXQ2QMOAN"
     ]
   }
 }

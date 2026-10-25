@@ -9,11 +9,12 @@
 // one instance of each, and extends each instance and its code to --extend-to
 // ledgers from now (default about 30 days). The second only extends.
 //
-// Every transaction is a fee bump paid by --key. On testnet the rent for code
-// has become larger than a plain transaction's fee can be (uint32 stroops, about
-// 429 XLM): on 2026-10-25 an upload cost about 2,000-2,700 XLM and a 30-day
-// extension 6,800-8,900 XLM. A fee bump's fee has no such limit. Keys stay in
-// the stellar CLI's keystore: this script builds, `stellar tx sign` signs.
+// Every transaction is a fee bump paid by --key, so a fee is never capped at what
+// a plain transaction's fee can be (uint32 stroops, about 429 XLM). On 2026-10-25,
+// before testnet's state target was raised from about 4.17 GB to about 8 GB, an
+// upload cost about 2,000-2,700 XLM and a 30-day extension 6,800-8,900 XLM; after
+// it, extending code and instance 30 days costs about 2-3 XLM. Keys stay in the
+// stellar CLI's keystore: this script builds, `stellar tx sign` signs.
 
 import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";

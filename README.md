@@ -438,7 +438,8 @@ Listed here as the work lands; the compare link above shows every change.
 - **Oct 25: the demo month on testnet.** [`tools/demo`](tools/demo/) staged the demo
   company's October: four wallets, three invoices registered on InvoiceSettlement, INV-1001
   [paid through the contract](https://stellar.expert/explorer/testnet/tx/65524c3a93bbe009cb6327e7d357d1108ff59192005e170ea0193babc5b451de),
-  an unexplained 3 USDC, two internal transfers, and Etherfuse sandbox CETES
+  8 EURC matched to INV-1002 by its memo, an unexplained 3 USDC, two internal
+  transfers, and Etherfuse sandbox CETES
   [bought](https://stellar.expert/explorer/testnet/tx/608b891f7342dc1844e6ec14f0f4801f85a089fc57c613661e6b76a5fc36da2c)
   by a "Treasury investments" wallet. The fetcher's snapshot of it is
   [`docs/examples/lisbon-coffee-roasters-2026-10.json`](docs/examples/lisbon-coffee-roasters-2026-10.json):

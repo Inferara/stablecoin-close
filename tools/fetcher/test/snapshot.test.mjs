@@ -305,3 +305,10 @@ test("the example in docs/examples is the recorded demo month", () => {
   const example = JSON.parse(readFileSync(join(here, "..", "..", "..", "docs", "examples", "lisbon-coffee-roasters-2026-10.json"), "utf8"));
   assert.deepEqual(example, fixture("testnet-lcr-2026-10.snapshot.json"));
 });
+
+test("the demo Treasury's EURC is matched to INV-1002 by its memo, at low confidence", () => {
+  const eurc = asset(wallet(lcr(), "Treasury"), "EURC");
+  assert.deepEqual(eurc.movements.map((m) => [m.direction, m.amount, m.memo, m.invoice_ref, m.invoice_ref_source]), [
+    ["in", "8.0000000", "INV1002", "INV-1002", "memo"],
+  ]);
+});

@@ -3,6 +3,7 @@
 // it can be tested on recorded inputs. See docs/haruno-stellar-month-1.md.
 
 import { Asset, Networks, xdr, scValToNative, Address } from "@stellar/stellar-sdk";
+import { REGISTRY, rwaEntry, pricedAs } from "./registry.mjs";
 
 export const FORMAT = "haruno.stellar.month/1";
 
@@ -108,9 +109,65 @@ function memoInvoice(memo, config) {
   return m[0].replace(re, config.memo_invoice_format || DEFAULT_MEMO_FORMAT);
 }
 
-function rateFor(asset, network, date, rates) {
+// A decimal string with at most `places` decimals, no exponent, no trailing zeros.
+export function decimal(n, places = 8) {
+  const s = Number(n).toFixed(places);
+  return s.includes(".") ? s.replace(/\.?0+$/, "") : s;
+}
+
+// The value of one unit of a registry asset at `moment`, from the prices the
+// fetcher read for it (input.prices[<entry id>]), trying the entry's sources in
+// order: { usd, source } or null.
+//   fixed           the stated NAV, at any date
+//   redstone_sep40  the latest on-chain reading at or before `moment`, if fresh
+//   coingecko       the daily price for the day of `moment`
+//   rumblefish      the daily close for that day (only read with a key)
+export function rwaValue(entry, moment, prices) {
+  const twin = pricedAs(entry);
+  const got = (prices && prices[twin.id]) || {};
+  const day = moment.toISOString().slice(0, 10);
+  const staleMs = REGISTRY.oracles.redstone_sep40.stale_after_hours * 3600_000;
+  for (const s of twin.sources || []) {
+    if (s.kind === "fixed") return { usd: s.value, source: "fixed-nav" };
+    if (s.kind === "redstone_sep40") {
+      const fresh = (got.redstone || []).filter((r) => {
+        const at = new Date(r.time);
+        return at <= moment && moment - at <= staleMs;
+      });
+      const r = fresh[fresh.length - 1];
+      if (r) return { usd: r.price, source: `redstone ${r.time}` };
+    }
+    if (s.kind === "coingecko" && got.coingecko && got.coingecko[day]) {
+      return { usd: got.coingecko[day], source: `coingecko ${s.id} ${day}` };
+    }
+    if (s.kind === "rumblefish" && got.rumblefish && got.rumblefish[day]) {
+      return { usd: got.rumblefish[day], source: `rumblefish ${day}` };
+    }
+  }
+  return null;
+}
+
+// A registry asset's rate: its value from rwaValue(), JPY at the day's USD/JPY,
+// and `basis` (nav, fixed_nav or market). A testnet token's source starts
+// `mainnet-twin`.
+function rwaRate(entry, day, moment, prices) {
+  const twin = entry.price_as ? "mainnet-twin;" : "";
+  const v = rwaValue(entry, moment, prices);
+  if (!v) return { usd: "0", jpy: "0", source: `${twin}unpriced;unpriced-jpy` };
+  const jpy = day && day.USD && day.USD.JPY;
+  return {
+    usd: v.usd,
+    jpy: jpy ? decimal(Number(v.usd) * jpy, 6) : "0",
+    source: `${twin}${entry.valuation};${v.source};${jpy ? `frankfurter.dev ${day.USD.date}` : "unpriced-jpy"}`,
+    basis: entry.valuation,
+  };
+}
+
+function rateFor(asset, network, date, rates, moment, prices) {
   const peg = PEGGED[network][assetKey(asset.code, asset.issuer)];
   const day = rates && rates[date];
+  const entry = rwaEntry(network, asset);
+  if (entry) return rwaRate(entry, day, moment, prices);
   if (peg === "USD") {
     const jpy = day && day.USD && day.USD.JPY;
     return jpy
@@ -244,6 +301,9 @@ export function buildSnapshot(input) {
   if (!PASSPHRASES[network]) throw new Error(`network must be testnet or mainnet: ${network}`);
   const { start, end } = monthBounds(month);
   const byAddress = new Map(config.wallets.map((w) => [w.address, w]));
+  // Holdings are valued at the month's last moment, or now while it runs.
+  const closingMoment = new Date(Math.min(end.getTime() - 1000, new Date(fetchedAt).getTime()));
+  const twinNotes = new Set();
   const notes = [];
   let anyCaveat = false;
   let usedRpc = false;
@@ -311,7 +371,7 @@ export function buildSnapshot(input) {
         memo: l.memo,
         invoice_ref: invoiceRef,
         invoice_ref_source: invoiceSource,
-        rate: rateFor(l.asset, network, l.time.slice(0, 10), input.rates),
+        rate: rateFor(l.asset, network, l.time.slice(0, 10), input.rates, t, input.prices),
       });
     }
 
@@ -329,10 +389,20 @@ export function buildSnapshot(input) {
       }
       const caveat = assetCaveats.length ? assetCaveats.join(" ") : null;
       if (caveat) anyCaveat = true;
+      const entry = rwaEntry(network, s.asset);
+      const twin = entry && entry.price_as ? pricedAs(entry) : null;
+      if (twin) twinNotes.add(`${entry.name} is valued at the price of ${twin.name} on mainnet: there is no testnet market.`);
       assets.push({
-        asset: { code: s.asset.code, issuer: s.asset.issuer, contract: sacContractId(s.asset.code, s.asset.issuer, network) },
+        asset: {
+          code: s.asset.code,
+          issuer: s.asset.issuer,
+          contract: sacContractId(s.asset.code, s.asset.issuer, network),
+          ...(entry && { class: entry.class }),
+          ...(twin && { priced_as: { network: twin.network, code: twin.code, issuer: twin.issuer } }),
+        },
         opening: fromStroops(opening),
         closing: fromStroops(closing),
+        closing_rate: rateFor(s.asset, network, closingMoment.toISOString().slice(0, 10), input.rates, closingMoment, input.prices),
         caveat,
         movements: s.movements,
       });
@@ -350,6 +420,10 @@ export function buildSnapshot(input) {
       assets,
     };
   });
+
+  notes.push(...twinNotes);
+  const fromOracle = (r) => r && /(^|;)redstone /.test(r.source);
+  if (wallets.some((w) => w.assets.some((a) => fromOracle(a.closing_rate) || a.movements.some((m) => fromOracle(m.rate))))) usedRpc = true;
 
   const snapshot = {
     format: FORMAT,

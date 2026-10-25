@@ -31,6 +31,11 @@
           },
           "opening": "0.0000000",
           "closing": "9662.8012499",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
           "caveat": null,
           "movements": [
             {
@@ -594,6 +599,11 @@
           },
           "opening": "0.0000000",
           "closing": "42.5000000",
+          "closing_rate": {
+            "usd": "1",
+            "jpy": "158.13",
+            "source": "par;frankfurter.dev 2026-10-20"
+          },
           "caveat": null,
           "movements": [
             {
@@ -693,6 +703,11 @@
           },
           "opening": "0.0000000",
           "closing": "9898.9314847",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
           "caveat": null,
           "movements": [
             {
@@ -857,6 +872,11 @@
           },
           "opening": "0.0000000",
           "closing": "45.6426867",
+          "closing_rate": {
+            "usd": "1",
+            "jpy": "158.13",
+            "source": "par;frankfurter.dev 2026-10-20"
+          },
           "caveat": null,
           "movements": [
             {

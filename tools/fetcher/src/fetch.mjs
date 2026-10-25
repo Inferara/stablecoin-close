@@ -1,9 +1,12 @@
-// Network side of the fetcher: reads Horizon, Soroban RPC and frankfurter.dev
-// and returns the input bundle that buildSnapshot() consumes. Nothing here
-// needs a key: every service read is public.
+// Network side of the fetcher: reads Horizon, Soroban RPC, frankfurter.dev and,
+// for the registry's real-world assets, RedStone on chain and CoinGecko, and
+// returns the input bundle that buildSnapshot() consumes. Nothing here needs a
+// key; Rumblefish is read only when RUMBLEFISH_API_KEY is set, and the key is
+// never written into the bundle.
 
-import { rpc, Account, Contract, TransactionBuilder, BASE_FEE, xdr, scValToNative } from "@stellar/stellar-sdk";
-import { PASSPHRASES, monthBounds, invoiceCall, legsFor } from "./snapshot.mjs";
+import { rpc, Account, Address, Contract, TransactionBuilder, BASE_FEE, xdr, scValToNative, nativeToScVal } from "@stellar/stellar-sdk";
+import { PASSPHRASES, monthBounds, invoiceCall, legsFor, decimal } from "./snapshot.mjs";
+import { REGISTRY, rwaEntry, pricedAs } from "./registry.mjs";
 
 export const ENDPOINTS = {
   testnet: { horizon: "https://horizon-testnet.stellar.org", rpc: "https://soroban-testnet.stellar.org" },
@@ -13,18 +16,23 @@ export const ENDPOINTS = {
 };
 
 const RATES_API = "https://api.frankfurter.dev/v1";
+const COINGECKO_API = "https://api.coingecko.com/api/v3";
+const RUMBLEFISH_API = "https://prices-api.sorobanscan.rumblefish.dev/v1";
+// The registry's oracles live on mainnet, whatever network the wallets are on.
+// A public mainnet RPC; set `mainnet_rpc_url` in the config to use another.
+const MAINNET_RPC = "https://mainnet.sorobanrpc.com";
 // Simulation needs a source account but does not check that it exists.
 const READ_SOURCE = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 
-async function getJson(url) {
+async function getJson(url, { headers = {}, backoffMs = 1000 } = {}) {
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(url, { headers: { accept: "application/json" } });
+    const res = await fetch(url, { headers: { accept: "application/json", ...headers } });
     if (res.status === 404) return null;
     if (res.ok) return res.json();
     if (attempt >= 3 || (res.status < 500 && res.status !== 429)) {
-      throw new Error(`${url}: HTTP ${res.status}`);
+      throw new Error(`${url.split("?")[0]}: HTTP ${res.status}`);
     }
-    await new Promise((ok) => setTimeout(ok, 1000 * attempt));
+    await new Promise((ok) => setTimeout(ok, backoffMs * attempt));
   }
 }
 
@@ -85,6 +93,109 @@ async function invoiceNumber(server, network, contractId, hashHex) {
   return scValToNative(sim.result.retval).invoice_number;
 }
 
+async function simulate(server, network, contractId, fn, ...args) {
+  const tx = new TransactionBuilder(new Account(READ_SOURCE, "0"), { fee: BASE_FEE, networkPassphrase: PASSPHRASES[network] })
+    .addOperation(new Contract(contractId).call(fn, ...args))
+    .setTimeout(60)
+    .build();
+  const sim = await server.simulateTransaction(tx);
+  if (rpc.Api.isSimulationError(sim) || !sim.result) return null;
+  return scValToNative(sim.result.retval);
+}
+
+// An i128 with `decimals` implied decimals, as an exact decimal string.
+export function scaled(value, decimals) {
+  const v = BigInt(value);
+  const unit = 10n ** BigInt(decimals);
+  const frac = (v % unit).toString().padStart(decimals, "0").replace(/0+$/, "");
+  return frac ? `${v / unit}.${frac}` : `${v / unit}`;
+}
+
+// RedStone's last readings (at most 10, about three days) for one token, oldest first.
+async function redstoneReadings(server, token) {
+  const oracle = REGISTRY.oracles.redstone_sep40;
+  const asset = xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("Stellar"), new Address(token).toScVal()]);
+  const list = await simulate(server, oracle.network, oracle.contract, "prices", asset, nativeToScVal(10, { type: "u32" }));
+  return (list || [])
+    .map((r) => ({ price: scaled(r.price, oracle.decimals), time: new Date(Number(r.timestamp) * 1000).toISOString().replace(/\.\d{3}Z$/, "Z") }))
+    .sort((a, b) => (a.time < b.time ? -1 : 1));
+}
+
+// CoinGecko's daily price (00:00 UTC) for a day; its keyless tier allows a few calls a minute.
+async function coingeckoDay(id, day) {
+  const [y, m, d] = day.split("-");
+  const body = await getJson(`${COINGECKO_API}/coins/${id}/history?date=${d}-${m}-${y}&localization=false`, { backoffMs: 20_000 });
+  const usd = body && body.market_data && body.market_data.current_price && body.market_data.current_price.usd;
+  return usd != null ? decimal(usd, 8) : null;
+}
+
+// Rumblefish daily closes over [from, to), by day.
+async function rumblefishDays(id, from, to, key) {
+  const q = `granularity=1d&base_currency=USD&start=${from.toISOString()}&end=${to.toISOString()}`;
+  const body = await getJson(`${RUMBLEFISH_API}/assets/${encodeURIComponent(id)}/ohlcv?${q}`, { headers: { "x-api-key": key } });
+  const out = {};
+  for (const c of (body && body.data) || []) if (c.timestamp && c.close != null) out[c.timestamp.slice(0, 10)] = decimal(c.close, 8);
+  return out;
+}
+
+// Prices for every registry asset the wallets held or moved this month, by the
+// id of the entry that values it: { redstone: [...], coingecko: {day: usd}, rumblefish: {day: usd} }.
+async function fetchPrices(config, accounts, start, end, closingDay, log) {
+  const wanted = new Map(); // entry id -> { entry, days }
+  for (const [address, a] of Object.entries(accounts)) {
+    const touched = [];
+    for (const b of a.balances) if (b.asset_issuer) touched.push({ asset: { code: b.asset_code, issuer: b.asset_issuer }, day: closingDay });
+    for (const l of legsFor(address, a, config.invoice_contract).legs) {
+      const t = new Date(l.time);
+      if (t >= start && t < end) touched.push({ asset: l.asset, day: l.time.slice(0, 10) });
+    }
+    for (const { asset, day } of touched) {
+      const entry = rwaEntry(config.network, asset);
+      if (!entry) continue;
+      const twin = pricedAs(entry);
+      if (!wanted.has(twin.id)) wanted.set(twin.id, { entry: twin, days: new Set([closingDay]) });
+      wanted.get(twin.id).days.add(day);
+    }
+  }
+  const prices = {};
+  if (!wanted.size) return prices;
+  const server = new rpc.Server(config.mainnet_rpc_url || MAINNET_RPC);
+  const key = process.env.RUMBLEFISH_API_KEY;
+  for (const [id, { entry, days }] of wanted) {
+    const got = (prices[id] = {});
+    const kinds = new Map((entry.sources || []).map((s) => [s.kind, s]));
+    if (kinds.has("redstone_sep40")) {
+      try {
+        got.redstone = await redstoneReadings(server, kinds.get("redstone_sep40").asset);
+      } catch (e) {
+        log(`RedStone could not be read for ${entry.code}: ${e.message}`);
+      }
+    }
+    // Daily sources fill the days the on-chain readings do not reach.
+    const covered = got.redstone && got.redstone.length ? got.redstone[0].time.slice(0, 10) : "9999";
+    const older = [...days].filter((d) => d < covered).sort();
+    if (older.length && kinds.has("coingecko")) {
+      got.coingecko = {};
+      for (const d of older) {
+        try {
+          const usd = await coingeckoDay(kinds.get("coingecko").id, d);
+          if (usd) got.coingecko[d] = usd;
+        } catch (e) {
+          log(`CoinGecko could not be read for ${entry.code} on ${d}: ${e.message}`);
+        }
+      }
+    }
+    if (older.length && key && kinds.has("rumblefish")) {
+      try {
+        got.rumblefish = await rumblefishDays(kinds.get("rumblefish").id, start, end, key);
+      } catch (e) {
+        log(`Rumblefish could not be read for ${entry.code}: ${e.message}`);
+      }
+    }
+  }
+  return prices;
+}
+
 async function ratesFor(date) {
   const [usd, eur] = await Promise.all([
     getJson(`${RATES_API}/${date}?base=USD&symbols=JPY`),
@@ -97,7 +208,7 @@ async function ratesFor(date) {
 }
 
 // Returns the bundle buildSnapshot() takes. `now` is injectable for tests.
-export async function fetchInput(config, month, { rates = true, now = new Date() } = {}) {
+export async function fetchInput(config, month, { rates = true, now = new Date(), log = (m) => console.error(m) } = {}) {
   const ep = ENDPOINTS[config.network];
   if (!ep) throw new Error(`network must be testnet or mainnet: ${config.network}`);
   const horizon = config.horizon_url || ep.horizon;
@@ -119,9 +230,13 @@ export async function fetchInput(config, month, { rates = true, now = new Date()
     }
   }
 
+  const fetchedAt = now.toISOString().replace(/\.\d{3}Z$/, "Z");
+  const closingDay = new Date(Math.min(end.getTime() - 1000, new Date(fetchedAt).getTime())).toISOString().slice(0, 10);
   const rateTable = {};
+  let prices = {};
   if (rates) {
-    const days = new Set();
+    prices = await fetchPrices(config, accounts, start, end, closingDay, log);
+    const days = new Set([closingDay]);
     for (const [address, a] of Object.entries(accounts)) {
       for (const l of legsFor(address, a, config.invoice_contract).legs) {
         const t = new Date(l.time);
@@ -134,9 +249,10 @@ export async function fetchInput(config, month, { rates = true, now = new Date()
   return {
     config,
     month,
-    fetched_at: now.toISOString().replace(/\.\d{3}Z$/, "Z"),
+    fetched_at: fetchedAt,
     accounts,
     invoices,
     rates: rateTable,
+    prices,
   };
 }

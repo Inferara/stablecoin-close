@@ -1,0 +1,213 @@
+{
+  "format": "stellar-rwa-registry/1",
+  "checked": "2026-10-25",
+  "oracles": {
+    "redstone_sep40": {
+      "network": "mainnet",
+      "contract": "CBMGLKUQZVSAIL5CPDDAWSUY7MAKXISHMOZEVLMBUWBMFGHRJSR4WYRF",
+      "decimals": 8,
+      "base": "USD",
+      "stale_after_hours": 36,
+      "note": "RedStone push oracle (SEP-40). lastprice(Asset::Stellar(<token>)) and prices(asset, n); keeps about the last 10 updates. RWA feeds are the issuer's FUNDAMENTAL value (NAV), not a market price."
+    },
+    "redstone_feed": {
+      "network": "mainnet",
+      "decimals": 8,
+      "base": "USD",
+      "note": "RedStone single-feed contracts: read_price_data() -> {price, package_timestamp (ms), write_timestamp (ms)}; latest value only."
+    },
+    "chainlink": {
+      "network": "mainnet",
+      "contract": "CDQBHEUGLDHMSUHG4IH33RJBUTMNCZOT4JIAQR4WZFRDZW6DR6S32ZLZ",
+      "decimals": 18,
+      "base": "USD",
+      "note": "Chainlink data feeds proxy (not SEP-40): latest_round(data_id, 18), get_round(data_id, round_id, 18). Rounds stay readable for about 180 days."
+    }
+  },
+  "assets": [
+    {
+      "id": "usdy",
+      "name": "Ondo US Dollar Yield",
+      "issuer_name": "Ondo Finance",
+      "home_domain": "ondo.finance",
+      "network": "mainnet",
+      "code": "USDY",
+      "issuer": "GAJMPX5NBOG6TQFPQGRABJEEB2YE7RFRLUKJDZAZGAD5GFX4J7TADAZ6",
+      "contract": "CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "nav",
+      "sources": [
+        { "kind": "redstone_sep40", "asset": "CB3YA656OYIHU57657I5KGSBRHE5I3OZU4VFC22PYAOANFZHEWNYGAGP" },
+        { "kind": "coingecko", "id": "ondo-us-dollar-yield" }
+      ],
+      "note": "A yield-accruing note backed by bank deposits and T-bills; its NAV rises daily. The DEX trades it 0.7-2% below NAV, so a DEX price is not its value."
+    },
+    {
+      "id": "benji",
+      "name": "Franklin OnChain U.S. Government Money Fund (BENJI)",
+      "issuer_name": "Franklin Templeton",
+      "home_domain": "franklintempleton.com",
+      "network": "mainnet",
+      "code": "BENJI",
+      "issuer": "GBHNGLLIE3KWGKCHIKMHJ5HVZHYIK7WTBE4QF5PLAKL4CJGSEU7HZIW5",
+      "contract": "CCDSDPD7FXB74PFB2SYCHGQRWLXQRYRTQSPCVSRJ7FAOLOUGWEYAXQ7A",
+      "token": "classic",
+      "decimals": 7,
+      "class": "fund_share",
+      "valuation": "fixed_nav",
+      "sources": [
+        { "kind": "fixed", "value": "1" },
+        { "kind": "redstone_feed", "contract": "CCDM2U5E3SBMPJUQCBIER4BSFAVSJTY5I5EQEZIRDZSA3YOJH3YM4TW5" },
+        { "kind": "coingecko", "id": "franklin-templeton-benji" }
+      ],
+      "note": "One BENJI is one share of FOBXX, a US government money market fund with a stable 1.00 NAV. Yield arrives as daily BENJI mints from the issuer: income, not a price change. Transfers need the issuer's authorisation."
+    },
+    {
+      "id": "wtgx",
+      "name": "WisdomTree Government Money Market Digital Fund",
+      "issuer_name": "WisdomTree",
+      "home_domain": "stellar.wisdomtree.com",
+      "network": "mainnet",
+      "code": "WTGX",
+      "issuer": "GDMBNMFJ3TRFLASJ6UGETFME3PJPNKPU24C7KFDBEBPQFG2CI6UC3JG6",
+      "contract": "CCDI4CNUSRI2UYQ2F44VVUB47WNYQL552SQLL5KT6JQHDTTOS4PAWQ5G",
+      "token": "classic",
+      "decimals": 7,
+      "class": "fund_share",
+      "valuation": "fixed_nav",
+      "sources": [
+        { "kind": "fixed", "value": "1" }
+      ],
+      "note": "The issuer's stellar.toml states a stable 1.00 NAV. Transfers need the issuer's authorisation."
+    },
+    {
+      "id": "cetes",
+      "name": "Etherfuse CETES",
+      "issuer_name": "Etherfuse",
+      "home_domain": "etherfuse.com",
+      "network": "mainnet",
+      "code": "CETES",
+      "issuer": "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC",
+      "contract": "CAL6ER2TI6CTRAY6BFXWNWA7WTYXUXTQCHUBCIBU5O6KM3HJFG6Z6VXV",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "sources": [
+        { "kind": "redstone_sep40", "asset": "CAL6ER2TI6CTRAY6BFXWNWA7WTYXUXTQCHUBCIBU5O6KM3HJFG6Z6VXV" },
+        { "kind": "coingecko", "id": "cetes" },
+        { "kind": "rumblefish", "id": "CETES:GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC" }
+      ],
+      "note": "Mexican federal treasury certificates (stablebond); the price accrues. Its DEX price stays within about 0.1% of NAV."
+    },
+    {
+      "id": "ustry",
+      "name": "Etherfuse USTRY",
+      "issuer_name": "Etherfuse",
+      "home_domain": "etherfuse.com",
+      "network": "mainnet",
+      "code": "USTRY",
+      "issuer": "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC",
+      "contract": "CBLV4ATSIWU67CFSQU2NVRKINQIKUZ2ODSZBUJTJ43VJVRSBTZYOPNUR",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "sources": [
+        { "kind": "redstone_sep40", "asset": "CBLV4ATSIWU67CFSQU2NVRKINQIKUZ2ODSZBUJTJ43VJVRSBTZYOPNUR" },
+        { "kind": "rumblefish", "id": "USTRY:GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC" }
+      ],
+      "note": "US Treasury notes (stablebond); the price accrues. No CoinGecko id was found."
+    },
+    {
+      "id": "tesouro",
+      "name": "Etherfuse TESOURO",
+      "issuer_name": "Etherfuse",
+      "home_domain": "etherfuse.com",
+      "network": "mainnet",
+      "code": "TESOURO",
+      "issuer": "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC",
+      "contract": "CD6M4R2322BYCY2LNWM74PEBQAQ63SA3DUJLI3L4225U4ZVCLMSCBCIS",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "sources": [
+        { "kind": "redstone_sep40", "asset": "CD6M4R2322BYCY2LNWM74PEBQAQ63SA3DUJLI3L4225U4ZVCLMSCBCIS" },
+        { "kind": "coingecko", "id": "etherfuse-tesouro" },
+        { "kind": "rumblefish", "id": "TESOURO:GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC" }
+      ],
+      "note": "Brazilian government notes (stablebond); the price accrues."
+    },
+    {
+      "id": "xaum",
+      "name": "Matrixdock Gold",
+      "issuer_name": "Matrixdock",
+      "home_domain": "matrixdock.com",
+      "network": "mainnet",
+      "code": "XAUm",
+      "issuer": null,
+      "contract": "CC2RBGYNCFBCVENIDL5BFBWPH4OUZM2UA3OD2K2N54GLMWCC4KWPVAGO",
+      "token": "soroban",
+      "decimals": 9,
+      "class": "commodity",
+      "valuation": "nav",
+      "sources": [
+        { "kind": "redstone_sep40", "asset": "CC2RBGYNCFBCVENIDL5BFBWPH4OUZM2UA3OD2K2N54GLMWCC4KWPVAGO" },
+        { "kind": "chainlink", "data_id": "0x0197aabf9c000332000000000000000000000000000000000000000000000000" },
+        { "kind": "coingecko", "id": "matrixdock-gold" }
+      ],
+      "note": "One token is one troy ounce of gold. A Soroban token (SEP-41), not a classic asset: Horizon does not show its balances, so tools/fetcher does not read its holdings yet."
+    },
+    {
+      "id": "cetes-testnet",
+      "name": "Etherfuse CETES (testnet sandbox)",
+      "issuer_name": "Etherfuse",
+      "home_domain": "sand.etherfuse.com",
+      "network": "testnet",
+      "code": "CETES",
+      "issuer": "GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4",
+      "contract": "CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "price_as": "cetes",
+      "note": "Etherfuse's testnet sandbox (its stellar.toml marks the token status \"test\"). There is no testnet market, so it is priced as mainnet CETES."
+    },
+    {
+      "id": "ustry-testnet",
+      "name": "Etherfuse USTRY (testnet sandbox)",
+      "issuer_name": "Etherfuse",
+      "home_domain": "sand.etherfuse.com",
+      "network": "testnet",
+      "code": "USTRY",
+      "issuer": "GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4",
+      "contract": "CCUGMX7HX6CH6T4XNPALQ7HCVU37RLUNHAYNSAIALTPFHFQVIRIHALBC",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "price_as": "ustry",
+      "note": "Etherfuse's testnet sandbox; priced as mainnet USTRY."
+    },
+    {
+      "id": "tesouro-testnet",
+      "name": "Etherfuse TESOURO (testnet sandbox)",
+      "issuer_name": "Etherfuse",
+      "home_domain": "sand.etherfuse.com",
+      "network": "testnet",
+      "code": "TESOURO",
+      "issuer": "GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4",
+      "contract": "CCKA3OUWLZPX3YT335UNHIFMKSYA37M66VKGD5XZOX4BA4IKTYP4WBEE",
+      "token": "classic",
+      "decimals": 7,
+      "class": "bond",
+      "valuation": "market",
+      "price_as": "tesouro",
+      "note": "Etherfuse's testnet sandbox; priced as mainnet TESOURO."
+    }
+  ]
+}

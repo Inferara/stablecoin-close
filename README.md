@@ -319,12 +319,35 @@ stellar contract deploy --wasm target/wasm32v1-none/release/report_anchor.wasm \
 Keys stay in the stellar CLI's own configuration or in your wallet. None belongs in
 this repository.
 
-## Built when
+## Starting point vs built at HackMeridian
 
-Everything in this repository was written for HackMeridian 2026, starting on
-2026-10-20, ahead of the on-site days (October 25-26); none of it existed before.
-Changes made on site will be listed here. Haruno itself, the app that reads the
-snapshot and reconciles it, existed before the event and is not in this repository.
+HackMeridian 2026 ran on site in Lisbon on October 25-26. The tag
+[`pre-hackmeridian`](https://github.com/Inferara/stablecoin-close/tree/pre-hackmeridian)
+marks where this repository stood when the event began; everything after it was
+built at the event:
+[**compare `pre-hackmeridian...main`**](https://github.com/Inferara/stablecoin-close/compare/pre-hackmeridian...main).
+The history before the tag is kept as it was written: nothing squashed, rebased or
+backdated.
+
+### Starting point (before October 25)
+
+Written for HackMeridian from 2026-10-20, ahead of the on-site days; none of it
+existed before that date:
+
+- the `InvoiceSettlement` and `ReportAnchor` contracts with their unit tests, and
+  their testnet deployment;
+- the payer, anchor and verifier pages, live on GitHub Pages;
+- the `haruno.stellar.month/1` snapshot format and the reference fetcher with its
+  recorded testnet fixture;
+- CI that builds the contracts and checks the deployed wasm hashes.
+
+Haruno, the app that reads the snapshot and reconciles it, is an existing product
+and is not in this repository. Its Stellar connector, and the reconciliation of the
+snapshot in its books engine, were also built before the event.
+
+### Built at HackMeridian (October 25-26)
+
+Listed here as the work lands; the compare link above shows every change.
 
 Parts of this repository were written with AI coding assistants.
 

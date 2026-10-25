@@ -1,7 +1,7 @@
 {
   "format": "haruno.stellar.month/1",
   "month": "2026-10",
-  "fetched_at": "2026-10-25T16:43:28Z",
+  "fetched_at": "2026-10-25T17:02:03Z",
   "company": "lisbon-coffee-roasters",
   "reporting_currency": "USD",
   "source": {
@@ -153,6 +153,42 @@
                 "usd": "0",
                 "jpy": "0",
                 "source": "unpriced;unpriced-jpy"
+              }
+            }
+          ]
+        },
+        {
+          "asset": {
+            "code": "EURC",
+            "issuer": "GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO",
+            "contract": "CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ"
+          },
+          "opening": "0.0000000",
+          "closing": "8.0000000",
+          "closing_rate": {
+            "usd": "1.1193",
+            "jpy": "175.51",
+            "source": "par-eur;frankfurter.dev 2026-10-23"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "e8e1e82e632f81c7a2bddab6fa2f24eead0c58876bc29f51b97e3f0b70df10d6",
+              "op_index": 0,
+              "time": "2026-10-25T17:01:47Z",
+              "direction": "in",
+              "amount": "8.0000000",
+              "counterparty": "GCGZQQKKI6TXHX5V4MRMDUXLXIR5FI3OG2FHUGOTAH3V5JORRCTBRIDU",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "payment",
+              "memo": "INV1002",
+              "invoice_ref": "INV-1002",
+              "invoice_ref_source": "memo",
+              "rate": {
+                "usd": "1.1193",
+                "jpy": "175.51",
+                "source": "par-eur;frankfurter.dev 2026-10-23"
               }
             }
           ]

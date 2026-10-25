@@ -27,6 +27,7 @@ the parts anyone can use or check without Haruno:
 | [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. [Live](https://inferara.github.io/stablecoin-close/pages/verifier/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
+| [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm): what each is, and where a real value for it comes from. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
 
 ## Prior art, and how Haruno differs
@@ -294,7 +295,15 @@ The config names the company, network, wallets (`id`, `name`, `purpose`, `addres
 - USDC and EURC (Circle's issuers on testnet and mainnet) are valued at par with USD
   and EUR, with EUR→USD and →JPY rates from [frankfurter.dev](https://frankfurter.dev)
   (ECB reference rates, business days). That is a peg assumption, not a market price.
-  Every other asset, XLM included, is written as unpriced (`"0"`).
+- Tokenised real-world assets listed in the [registry](registry/) are valued from the
+  sources it names: RedStone's on-chain feeds (the issuer's NAV for USDY and XAUm),
+  a stated fixed NAV (BENJI, WTGX), and CoinGecko's public daily history for days the
+  oracle no longer holds; Rumblefish too when `RUMBLEFISH_API_KEY` is set. A testnet
+  token from Etherfuse's sandbox is valued at its mainnet twin's price and says so.
+  These holdings carry `asset.class`, and their rates `basis`. Every other asset, XLM
+  included, is written as unpriced (`"0"`).
+- Every wallet-asset carries a `closing_rate`: the value at the month's end, or now
+  while the month runs.
 - Mainnet works the same way, except that SDF runs no public mainnet RPC: set `rpc_url`
   to read invoice numbers there.
 
@@ -348,6 +357,13 @@ snapshot in its books engine, were also built before the event.
 ### Built at HackMeridian (October 25-26)
 
 Listed here as the work lands; the compare link above shows every change.
+
+- **Oct 25: open RWA registry and valuation.** [`registry/stellar-rwa.json`](registry/)
+  lists Stellar's tokenised real-world assets with their value sources. The fetcher
+  now values them (RedStone on chain, fixed NAV, CoinGecko, optional Rumblefish),
+  values a testnet sandbox token at its mainnet twin's price, and writes a
+  `closing_rate` for every holding. The snapshot format gains the optional
+  `asset.class`, `asset.priced_as` and `rate.basis` fields.
 
 Parts of this repository were written with AI coding assistants.
 

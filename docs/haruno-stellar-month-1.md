@@ -35,6 +35,7 @@ writing side.
           "asset": { "code": "USDC", "issuer": "G...", "contract": "C..." },
           "opening": "0.0000000",
           "closing": "1200.0000000",
+          "closing_rate": { "usd": "1", "jpy": "152.10", "source": "par;frankfurter.dev 2026-10-23" },
           "movements": [
             {
               "tx_hash": "64 hex",
@@ -93,6 +94,10 @@ writing side.
   unit. `rate.source` names where each number came from (for example
   `par;frankfurter.dev 2026-10-05`: USD at par, JPY from frankfurter.dev's rate
   for that date).
+- Every wallet-asset carries `closing_rate`, the same shape as a movement's
+  `rate`, priced at the month's last moment (23:59:59 UTC of its last day), or at
+  `fetched_at` while the month runs. It values `closing`, even when the asset did
+  not move that month.
 - `gl_account` is the books account the wallet maps to, by name; `null` means
   "not mapped": a reader has nothing to reconcile it against and should say so.
 - Addresses are public keys only (`G…` accounts, `C…` contracts). No secret
@@ -120,3 +125,41 @@ writing side.
 - An unknown rate is `"0"` and `rate.source` says which side is unknown
   (`unpriced` for USD, `unpriced-jpy` for JPY). `"0"` there means unknown, never
   worthless.
+
+## Tokenised real-world assets (optional fields)
+
+A writer that recognises a tokenised real-world asset (a fund share, a bond, a
+gold token) may say so with three optional fields. A reader that does not know
+them ignores them; nothing else in the file changes. The open registry in
+[`registry/stellar-rwa.json`](../registry/stellar-rwa.json) is one source of this
+knowledge; `tools/fetcher` writes these fields for the assets it lists.
+
+```json
+{
+  "asset": {
+    "code": "CETES",
+    "issuer": "GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4",
+    "contract": "C...",
+    "class": "bond",
+    "priced_as": { "network": "mainnet", "code": "CETES", "issuer": "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC" }
+  },
+  "closing_rate": {
+    "usd": "0.063628", "jpy": "9.677819", "basis": "market",
+    "source": "mainnet-twin;market;redstone 2026-10-25T09:05:00Z;frankfurter.dev 2026-10-23"
+  }
+}
+```
+
+- `asset.class` is `fund_share`, `bond` or `commodity`: what the token is a claim
+  on. It is matched by code **and** issuer (or contract), never by code alone, since
+  anyone can issue an asset of any code.
+- `asset.priced_as` names the mainnet asset whose price values a **testnet**
+  token. There is no testnet market, so a test token from an issuer's sandbox is
+  valued at its mainnet twin's price; the rate's `source` then starts with
+  `mainnet-twin`. A reader should say so wherever it shows the value.
+- `rate.basis` (on a movement's `rate` or a `closing_rate`) says what kind of value
+  the USD number is: `nav` (the issuer's net asset value or redemption value, for
+  example from an oracle's FUNDAMENTAL feed), `fixed_nav` (a fund with a stated
+  stable NAV, such as 1.00), or `market` (a traded price, used only where the market
+  tracks the value closely). Absent means the writer did not say; `source` still
+  names where the number came from. A traded price is never a fund share's NAV.

@@ -3,6 +3,8 @@
 // sources the registry names (stated NAV, RedStone on chain), the Stellar DEX
 // price against USDC where it trades, and its supply on Stellar. Everything is
 // read in the browser from public endpoints; nothing is stored or sent anywhere.
+// A haruno.stellar.month/1 snapshot dropped on the page is read locally and its
+// real-world assets are valued again with the same live values.
 (function () {
   const S = window.StellarSdk;
   const $ = (id) => document.getElementById(id);
@@ -10,6 +12,8 @@
   const RPC = "https://mainnet.sorobanrpc.com";
   const HORIZON = "https://horizon.stellar.org";
   const REGISTRY_URL = "../../registry/stellar-rwa.json";
+  const SAMPLE_SNAPSHOT_URL = "../../docs/examples/lisbon-coffee-roasters-2026-10.json";
+  const SNAPSHOT_FORMAT = "haruno.stellar.month/1";
   // Circle's USDC on mainnet: the quote asset for DEX prices.
   const USDC = { code: "USDC", issuer: "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN" };
   // Simulation needs a source account but does not check that it exists.
@@ -191,16 +195,143 @@
       parts.rows.append(row("Supply on Stellar", `${unitsText(units)} ${entry.code}`));
       if (value) parts.rows.append(row("Value on Stellar", moneyText(units * value.usd)));
     }
-    return value && units !== null ? units * value.usd : null;
+    return { perToken: value ? value.usd : null, onStellar: value && units !== null ? units * value.usd : null };
+  }
+
+  // --- a snapshot, valued again now ---
+
+  // Registry id -> promise of the live value per token in USD (or null).
+  const live = {};
+
+  // Matched by network, code and issuer (or contract), never by code alone.
+  function registryEntry(registry, network, asset) {
+    return registry.assets.find((e) => e.network === network && e.code === asset.code &&
+      (asset.issuer ? e.issuer === asset.issuer : e.contract === asset.contract)) || null;
+  }
+
+  function snapshotError(message) {
+    $("snapshot-error").textContent = message;
+    $("snapshot-error").hidden = !message;
+    if (message) $("snapshot-result").hidden = true;
+  }
+
+  const signedPercent = (r) => `${r >= 0 ? "+" : "−"}${Math.abs(r * 100).toFixed(2)}%`;
+
+  async function showSnapshot(registry, snap) {
+    if (!snap || snap.format !== SNAPSHOT_FORMAT || !Array.isArray(snap.wallets)) {
+      return snapshotError(`This is not a ${SNAPSHOT_FORMAT} snapshot.`);
+    }
+    snapshotError("");
+    const holdings = $("snapshot-holdings");
+    const summary = $("snapshot-summary");
+    holdings.replaceChildren();
+    summary.replaceChildren();
+    const testnet = snap.wallets.some((w) => w.network === "testnet");
+    $("snapshot-title").textContent = `${snap.company} · ${snap.month}${testnet ? " · testnet" : ""}`;
+    $("snapshot-result").hidden = false;
+
+    let fileTotal = 0;
+    let rwaThen = 0;
+    let rwaNow = 0;
+    const others = [];
+    const jobs = [];
+    for (const w of snap.wallets) {
+      for (const a of w.assets || []) {
+        const units = Number(a.closing);
+        if (!(units > 0)) continue;
+        const rate = a.closing_rate || {};
+        const then = Number(rate.usd) > 0 ? units * Number(rate.usd) : null;
+        if (then !== null) fileTotal += then;
+        const entry = registryEntry(registry, w.network, a.asset);
+        const priced = entry && entry.price_as ? registry.assets.find((e) => e.id === entry.price_as) : entry;
+        if (!priced) {
+          others.push(`${w.name}: ${unitsText(units)} ${a.asset.code}, ${then === null ? "unpriced" : usd(then, 2)}`);
+          continue;
+        }
+        const now = row("Now", "…");
+        holdings.append(el("div", { className: "holding" },
+          el("div", { className: "head" },
+            el("h3", { textContent: `${w.name} · ${a.asset.code}` }),
+            el("div", { className: "tags" },
+              el("span", { className: "tag", textContent: CLASS_LABEL[priced.class] || priced.class }),
+              entry !== priced ? el("span", { className: "tag", textContent: `Priced as mainnet ${priced.code}` }) : null)),
+          el("dl", { className: "rows" },
+            row("Holding", `${unitsText(units)} ${a.asset.code}`),
+            row("Month end, in the file", then === null
+              ? "unpriced"
+              : `${usd(then, 2)} (${priceText(Number(rate.usd))}${rate.basis ? `, ${rate.basis}` : ""})`),
+            now)));
+        if (then !== null) rwaThen += then;
+        jobs.push((live[priced.id] || Promise.resolve(null)).then((perToken) => {
+          const dd = now.querySelector("dd");
+          if (perToken === null) {
+            dd.textContent = "not available";
+            return;
+          }
+          rwaNow += units * perToken;
+          const change = then ? `, ${signedPercent((units * perToken - then) / then)}` : "";
+          dd.textContent = `${usd(units * perToken, 2)} (${priceText(perToken)}${change})`;
+        }));
+      }
+    }
+    if (others.length) {
+      holdings.append(el("div", { className: "holding" },
+        el("p", { className: "label", textContent: "Other holdings, as valued in the file" }),
+        ...others.map((t) => el("p", { className: "hint", style: "margin:2px 0", textContent: t }))));
+    }
+    summary.append(row("Holdings valued in the file", usd(fileTotal, 2)));
+    const rwaRow = row("Real-world assets", "…");
+    summary.append(rwaRow);
+    if (testnet) summary.append(row("Testnet tokens", "valued at their mainnet twins' prices"));
+    await Promise.all(jobs);
+    rwaRow.querySelector("dd").textContent = jobs.length ? `${usd(rwaThen, 2)} at month end, ${usd(rwaNow, 2)} now` : "none in this file";
+  }
+
+  function wireSnapshot(registryReady) {
+    const take = async (text) => {
+      let snap;
+      try {
+        snap = JSON.parse(text);
+      } catch {
+        return snapshotError("This file is not JSON.");
+      }
+      const registry = await registryReady;
+      if (registry) await showSnapshot(registry, snap);
+    };
+    const readFile = (file) => file && file.text().then(take);
+    $("snapshot-file").addEventListener("change", (e) => readFile(e.target.files[0]));
+    const drop = $("snapshot-drop");
+    ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => {
+      e.preventDefault();
+      drop.classList.add("over");
+    }));
+    ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, () => drop.classList.remove("over")));
+    drop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      readFile(e.dataTransfer.files[0]);
+    });
+    $("snapshot-sample").addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch(SAMPLE_SNAPSHOT_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await take(await res.text());
+      } catch (err) {
+        snapshotError(`The demo snapshot could not be loaded: ${err.message}`);
+      }
+    });
   }
 
   async function main() {
+    let ready;
+    wireSnapshot(new Promise((resolve) => (ready = resolve)));
     let registry;
     try {
       registry = await getJson(REGISTRY_URL);
     } catch (e) {
       $("error").textContent = `The registry could not be loaded: ${e.message}`;
       $("error").hidden = false;
+      ready(null);
       return;
     }
     const entries = registry.assets.filter((e) => e.network === "mainnet");
@@ -208,13 +339,16 @@
     const jobs = entries.map((entry) => {
       const parts = card(entry);
       list.append(parts.node);
-      return fill(entry, registry.oracles, parts).catch((e) => {
+      const job = fill(entry, registry.oracles, parts).catch((e) => {
         parts.value.textContent = "Not read";
         parts.source.textContent = e.message;
         return null;
       });
+      live[entry.id] = job.then((r) => (r ? r.perToken : null));
+      return job;
     });
-    const values = await Promise.all(jobs);
+    ready(registry);
+    const values = (await Promise.all(jobs)).map((r) => (r ? r.onStellar : null));
     const valued = values.filter((v) => v !== null);
     const total = valued.reduce((a, b) => a + b, 0);
     $("total").textContent = valued.length

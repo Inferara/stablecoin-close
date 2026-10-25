@@ -44,7 +44,7 @@ the parts anyone can use or check without Haruno:
 | [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. [Live](https://inferara.github.io/stablecoin-close/pages/payer/) |
 | [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. [Live](https://inferara.github.io/stablecoin-close/pages/anchor/) |
 | [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. [Live](https://inferara.github.io/stablecoin-close/pages/verifier/) |
-| [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
+| [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. A dropped month snapshot has its real-world assets valued again now. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
 | [`docs/examples`](docs/examples/lisbon-coffee-roasters-2026-10.json) | A snapshot of the demo company's October on testnet, as the fetcher wrote it. |
@@ -443,6 +443,11 @@ Listed here as the work lands; the compare link above shows every change.
   by a "Treasury investments" wallet. The fetcher's snapshot of it is
   [`docs/examples/lisbon-coffee-roasters-2026-10.json`](docs/examples/lisbon-coffee-roasters-2026-10.json):
   the CETES is a `bond` valued at mainnet CETES's price. It is recorded as a test fixture.
+- **Oct 25: the RWA values page values a company's month.** Drop a
+  `haruno.stellar.month/1` snapshot on [`pages/rwa`](https://inferara.github.io/stablecoin-close/pages/rwa/)
+  (or try the demo company's October): each real-world asset in it is shown at the
+  value written at month end and at the live value now, testnet tokens at their mainnet
+  twins' prices. The file is read in the browser and never uploaded.
 
 Parts of this repository were written with AI coding assistants.
 

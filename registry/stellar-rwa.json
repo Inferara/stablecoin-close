@@ -1,4 +1,5 @@
 {
+  "$schema": "./stellar-rwa.schema.json",
   "format": "stellar-rwa-registry/1",
   "checked": "2026-10-25",
   "oracles": {

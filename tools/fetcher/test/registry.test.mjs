@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { buildSnapshot, validateSnapshot, sacContractId, decimal } from "../src/snapshot.mjs";
 import { REGISTRY, rwaEntry, pricedAs } from "../src/registry.mjs";
 import { scaled } from "../src/fetch.mjs";
+import { readFileSync } from "node:fs";
+import Ajv2020 from "ajv/dist/2020.js";
 
 const TREASURY = "GB4SLTFQR4BPHQSEK3L2HAURRMF2L5YNZU2ZPBIKRANYLBJS3OYKCZ4G";
 const SELLER = "GDZDOY2F4QUCIQMBOHC32JARTYQ2F336IANXJOKQDB2V7SMBONBAX3L4";
@@ -12,6 +14,31 @@ const BENJI_ISSUER = "GBHNGLLIE3KWGKCHIKMHJ5HVZHYIK7WTBE4QF5PLAKL4CJGSEU7HZIW5";
 const COPYCAT = "GDQNY3PBOJOKYZSRMK2S7LHHGWZIUISD4QORETLMXEWXBI7KFZZMKTL3";
 
 // --- the registry file itself ---
+
+const SCHEMA = JSON.parse(readFileSync(new URL("../../../registry/stellar-rwa.schema.json", import.meta.url), "utf8"));
+const validate = new Ajv2020({ allErrors: true }).compile(SCHEMA);
+const schemaErrors = (doc) => (validate(doc) ? [] : validate.errors.map((e) => `${e.instancePath} ${e.message}`));
+
+test("the registry matches its JSON Schema", () => {
+  assert.deepEqual(schemaErrors(REGISTRY), []);
+});
+
+test("the schema refuses a malformed entry", () => {
+  const usdy = REGISTRY.assets.find((e) => e.id === "usdy");
+  const twin = REGISTRY.assets.find((e) => e.id === "cetes-testnet");
+  const bad = [
+    { ...usdy, class: "crypto" },
+    { ...usdy, issuer: null },
+    { ...usdy, sources: [{ kind: "fixed", value: 1 }] },
+    { ...usdy, sources: [{ kind: "oracle", asset: usdy.contract }] },
+    { ...usdy, price_as: "cetes" },
+    { ...twin, network: "mainnet" },
+    { ...usdy, extra: true },
+  ];
+  for (const entry of bad) {
+    assert.notDeepEqual(schemaErrors({ ...REGISTRY, assets: [entry] }), [], JSON.stringify(entry).slice(0, 80));
+  }
+});
 
 test("every registry entry is well formed, and every classic one names its own SAC", () => {
   const ids = new Set();

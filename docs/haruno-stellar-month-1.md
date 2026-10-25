@@ -5,6 +5,8 @@ A connector writes one file per company per calendar month (UTC), and a reader
 contract between the two: neither side reads the other's code or data.
 `tools/fetcher` in this repository is an open reference implementation of the
 writing side.
+[`docs/examples/lisbon-coffee-roasters-2026-10.json`](examples/lisbon-coffee-roasters-2026-10.json)
+is a real month on testnet as it writes it, including a tokenised bond.
 
 ## Shape
 

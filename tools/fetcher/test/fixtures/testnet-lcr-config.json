@@ -1,0 +1,36 @@
+{
+  "company": "lisbon-coffee-roasters",
+  "reporting_currency": "USD",
+  "network": "testnet",
+  "invoice_contract": "CB4SGMUT56YKMYQWOQN2T3FTBZOJBZHYUYYV6QTVTJGGCYLWIIDOBPWB",
+  "wallets": [
+    {
+      "id": "w-1",
+      "name": "Treasury",
+      "purpose": "receivables",
+      "address": "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML",
+      "gl_account": "USDC Treasury"
+    },
+    {
+      "id": "w-2",
+      "name": "Payroll",
+      "purpose": "payroll",
+      "address": "GACQMOWTVRCMPYB4PDI6UPCHG5E3TFSLBXAU6GRZJM5RFXIWSM3JHHDZ",
+      "gl_account": "Payroll Wallet"
+    },
+    {
+      "id": "w-3",
+      "name": "Team",
+      "purpose": "team",
+      "address": "GDRCKHUD6INZNBKGDH2OB5KJ5RU45PXQYNEQBPZ5I5IUTOU673NPTROU",
+      "gl_account": "Employee advances"
+    },
+    {
+      "id": "w-4",
+      "name": "Treasury investments",
+      "purpose": "treasury",
+      "address": "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX",
+      "gl_account": "Short-term investments"
+    }
+  ]
+}

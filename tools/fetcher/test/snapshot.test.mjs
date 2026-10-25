@@ -253,3 +253,55 @@ test("the CLI replays a recorded input to the same file", () => {
   ], { encoding: "utf8" });
   assert.deepEqual(JSON.parse(out), fixture("testnet-2026-10.snapshot.json"));
 });
+
+// --- recorded demo month (tools/demo/bin/stage-testnet.mjs, staged 2026-10-25) ---
+// Four company wallets, invoices on the redeployed InvoiceSettlement, and a
+// wallet holding Etherfuse's sandbox CETES, a tokenised bond.
+
+const LCR_TREASURY = "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML";
+const LCR_INVEST = "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX";
+const lcr = () => buildSnapshot(fixture("testnet-lcr-2026-10.input.json"));
+
+test("replaying the recorded demo month reproduces the committed snapshot", () => {
+  assert.deepEqual(lcr(), fixture("testnet-lcr-2026-10.snapshot.json"));
+  assert.deepEqual(validateSnapshot(lcr()), []);
+});
+
+test("sandbox CETES is a bond priced as its mainnet twin, at a market basis", () => {
+  const cetes = asset(wallet(lcr(), "Treasury investments"), "CETES");
+  assert.equal(cetes.asset.class, "bond");
+  assert.deepEqual(cetes.asset.priced_as, {
+    network: "mainnet", code: "CETES", issuer: "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC",
+  });
+  for (const rate of [cetes.closing_rate, ...cetes.movements.map((m) => m.rate)]) {
+    assert.equal(rate.basis, "market");
+    assert.match(rate.source, /^mainnet-twin;/);
+    assert.ok(Number(rate.usd) > 0);
+  }
+});
+
+test("buying CETES is a conversion inside the wallet; funding it from the Treasury is internal", () => {
+  const w = wallet(lcr(), "Treasury investments");
+  const legs = w.assets.flatMap((a) => a.movements.filter((m) => m.kind !== "fee")
+    .map((m) => [a.asset.code, m.direction, m.kind, m.counterparty, m.internal]));
+  assert.deepEqual(legs, [
+    ["XLM", "in", "create_account", LCR_TREASURY, true],
+    ["XLM", "out", "path_payment", LCR_INVEST, false],
+    ["CETES", "in", "path_payment", LCR_INVEST, false],
+  ]);
+});
+
+test("the demo Treasury: INV-1001 from the contract, 3 USDC unexplained, two internal transfers", () => {
+  const usdc = asset(wallet(lcr(), "Treasury"), "USDC");
+  assert.deepEqual(usdc.movements.map((m) => [m.direction, m.amount, m.invoice_ref, m.invoice_ref_source, m.internal]), [
+    ["in", "12.0000000", "INV-1001", "contract", false],
+    ["in", "3.0000000", null, null, false],
+    ["out", "5.0000000", null, null, true],
+    ["out", "2.0000000", null, null, true],
+  ]);
+});
+
+test("the example in docs/examples is the recorded demo month", () => {
+  const example = JSON.parse(readFileSync(join(here, "..", "..", "..", "docs", "examples", "lisbon-coffee-roasters-2026-10.json"), "utf8"));
+  assert.deepEqual(example, fixture("testnet-lcr-2026-10.snapshot.json"));
+});

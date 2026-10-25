@@ -1,0 +1,15 @@
+{
+  "name": "stablecoin-close-demo",
+  "version": "0.1.0",
+  "description": "Stages the Lisbon Coffee Roasters demo month on Stellar testnet.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "stage": "node bin/stage-testnet.mjs"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "17.2.1"
+  }
+}

@@ -202,16 +202,27 @@ An invoice, anchor or owner entry, and the contract instance with its code, that
 read or written with less than about 7 days left is extended to about 30 days; most
 calls extend nothing. Anyone can extend an entry further with an `ExtendFootprintTTL`
 operation, and an entry that expires is archived, not deleted, and can be restored.
-On testnet on 2026-10-25 a new invoice cost about 70 XLM in rent and fees, and a
-company's first anchor about 89 XLM. (The first deployment extended everything to the
-network maximum, about 6 months. That made the same calls 400 and 510 XLM, and the
-second was over the most a transaction fee can be, so it could not be submitted at all.)
+
+Testnet rent follows how full the network's state is against its target. On the evening
+of 2026-10-25 testnet's state target was raised from about 4.17 GB to about 8 GB, and
+rent fell accordingly. Simulated on testnet afterwards (ledger 5,387,000), in rent and
+fees:
+
+| Call | Cost |
+|---|---|
+| A company's first anchor (`anchor`, new anchor and owner entries) | about 0.03 XLM |
+| A new invoice (`register_invoice`) | about 0.02 XLM |
+| Extending a contract's code and instance about 30 days further | about 2-3 XLM |
+
+Earlier the same day, before the change, the first two cost about 89 and 70 XLM, and
+with the first deployment's 6-month lifetimes 510 and 400 XLM, over the most a
+transaction fee can be. Rent can rise again as testnet fills, so check a simulation
+before relying on these figures.
 
 The instance and code were extended to about ledger 5,902,900 (around November 24, 2026).
-At today's testnet rent, extending code costs thousands of XLM, more than a plain
-transaction can pay, so they must be extended with
-[`tools/deploy`](tools/deploy/bin/deploy.mjs) (fee-bump transactions) before about
-November 17, when calls would otherwise start to extend them themselves:
+A call made in their last 7 days extends them itself, and at today's rent a plain
+transaction pays for that. To extend them ahead of time anyway, `tools/deploy` does it
+(it sends fee-bump transactions, which are no longer required):
 
 ```sh
 cd tools/deploy && npm ci
@@ -372,11 +383,13 @@ stellar contract build          # target/wasm32v1-none/release/*.wasm
 ```
 
 To deploy on testnet, use the wasm CI publishes (the `contracts-wasm` artifact of a CI
-run), so the hashes match `deployments/testnet.json`. Uploading code there now costs
-more than a plain transaction's fee can be, so `tools/deploy` sends fee-bump
-transactions. A friendbot account holds 10,000 XLM; on 2026-10-25 the two uploads, two
-deployments and two 30-day extensions took about 20,400 XLM, so merge a few funded
-accounts into the deployer first:
+run), so the hashes match `deployments/testnet.json`. `tools/deploy` sends fee-bump
+transactions, so an upload is not limited by the most a plain transaction's fee can be.
+That was needed on 2026-10-25, when the two uploads, two deployments and two 30-day
+extensions took about 20,400 XLM (a friendbot account holds 10,000, so a few funded
+accounts were merged into the deployer). After testnet's state target was raised the
+same evening, rent is a small fraction of that; simulate first to see what a deployment
+costs now:
 
 ```sh
 stellar keys generate deployer --network testnet --fund
@@ -435,6 +448,10 @@ Listed here as the work lands; the compare link above shows every change.
   days (70 and 89 XLM on the same day), and were redeployed with fee-bump
   transactions from [`tools/deploy`](tools/deploy/bin/deploy.mjs). The pages, the demo
   invoice and the sample anchor moved to the new contracts.
+- **Oct 25: testnet rent fell.** That evening testnet's state target was raised from
+  about 4.17 GB to about 8 GB. A company's first anchor now costs about 0.03 XLM and a
+  new invoice about 0.02 XLM, and extending the contracts' code costs a few XLM, so no
+  fee-bump extension is needed before November.
 - **Oct 25: the demo month on testnet.** [`tools/demo`](tools/demo/) staged the demo
   company's October: four wallets, three invoices registered on InvoiceSettlement, INV-1001
   [paid through the contract](https://stellar.expert/explorer/testnet/tx/65524c3a93bbe009cb6327e7d357d1108ff59192005e170ea0193babc5b451de),

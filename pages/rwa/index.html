@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RWA Values on Stellar</title>
+  <meta name="description" content="Tokenised real-world assets on Stellar, valued live from on-chain oracles and the issuers' stated NAV.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../shared/style.css">
+  <style>
+    main { max-width: 720px; }
+    .intro { margin: 0 0 16px; color: var(--muted); }
+    .total { margin-bottom: 16px; }
+    .asset h2 { font-size: 1.05rem; margin: 0; }
+    .asset .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .asset .who { font-size: 0.85rem; color: var(--muted); margin: 2px 0 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tag { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+    .value { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .value .big { font-size: clamp(1.6rem, 7vw, 2.1rem); }
+    .gap { font-size: 0.85rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+    .gap.ok { background: var(--ok-bg); color: var(--ok); }
+    .gap.warn { background: var(--warn-bg); color: var(--warn); }
+    .asset .note { font-size: 0.85rem; color: var(--muted); margin: 12px 0 0; }
+    .asset dl.rows { margin-top: 12px; font-size: 0.95rem; }
+    .stale { color: var(--warn); }
+    .loading { color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>Real-world assets on Stellar</h1>
+    <span class="badge">Mainnet · live</span>
+  </header>
+
+  <p class="intro">
+    What a month-end close has to value: tokenised funds, bonds and gold, plus a bridged stablecoin.
+    Each value is read live from the source the open
+    <a href="https://github.com/Inferara/stablecoin-close/tree/main/registry">registry</a> names for it:
+    the issuer's NAV from RedStone's on-chain feeds, or a fund's stated NAV. Where the asset trades on
+    Stellar's exchange, the market price is shown beside it, because a traded price is not a fund's value.
+  </p>
+
+  <div id="error" class="notice error" role="alert" hidden></div>
+
+  <section class="card total" aria-live="polite">
+    <p class="label">Valued on Stellar right now</p>
+    <p class="big" id="total"><span class="loading">…</span></p>
+    <p class="hint" id="total-note" style="margin:6px 0 0">Supply on Stellar × the value below, for the assets listed here.</p>
+  </section>
+
+  <div id="assets" aria-live="polite"></div>
+
+  <p class="hint">
+    Testnet tokens from Etherfuse's sandbox are valued at their mainnet twins' prices in the
+    <a href="https://github.com/Inferara/stablecoin-close/tree/main/tools/fetcher">reference fetcher</a>:
+    there is no testnet market. Values are read in your browser from public sources; nothing is stored.
+    Information, not investment advice.
+  </p>
+
+  <footer>
+    Oracle reads over a public Stellar RPC (<span class="mono" id="rpc"></span>), markets from Horizon.<br>
+    <a href="https://github.com/Inferara/stablecoin-close">Source</a> ·
+    <a href="https://github.com/Inferara/stablecoin-close/blob/main/registry/stellar-rwa.json">registry/stellar-rwa.json</a>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@17.2.1/dist/stellar-sdk.min.js"
+        integrity="sha384-z72iOjWW+lhGmZrU900uVQX76pdHCbGOL7YyFgTd/mzXLbHQtQuUrxGOfETZJM/D"
+        crossorigin="anonymous"></script>
+<script src="app.js"></script>
+</body>
+</html>

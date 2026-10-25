@@ -118,7 +118,7 @@ export function decimal(n, places = 8) {
 // The value of one unit of a registry asset at `moment`, from the prices the
 // fetcher read for it (input.prices[<entry id>]), trying the entry's sources in
 // order: { usd, source } or null.
-//   fixed           the stated NAV, at any date
+//   fixed           the stated NAV (or a stablecoin's par), at any date
 //   redstone_sep40  the latest on-chain reading at or before `moment`, if fresh
 //   coingecko       the daily price for the day of `moment`
 //   rumblefish      the daily close for that day (only read with a key)
@@ -128,7 +128,8 @@ export function rwaValue(entry, moment, prices) {
   const day = moment.toISOString().slice(0, 10);
   const staleMs = REGISTRY.oracles.redstone_sep40.stale_after_hours * 3600_000;
   for (const s of twin.sources || []) {
-    if (s.kind === "fixed") return { usd: s.value, source: "fixed-nav" };
+    // At par the basis says it all, as for the pegged stablecoins above.
+    if (s.kind === "fixed") return { usd: s.value, source: twin.valuation === "par" ? null : "fixed-nav" };
     if (s.kind === "redstone_sep40") {
       const fresh = (got.redstone || []).filter((r) => {
         const at = new Date(r.time);
@@ -148,7 +149,7 @@ export function rwaValue(entry, moment, prices) {
 }
 
 // A registry asset's rate: its value from rwaValue(), JPY at the day's USD/JPY,
-// and `basis` (nav, fixed_nav or market). A testnet token's source starts
+// and `basis` (nav, fixed_nav, market or par). A testnet token's source starts
 // `mainnet-twin`.
 function rwaRate(entry, day, moment, prices) {
   const twin = entry.price_as ? "mainnet-twin;" : "";
@@ -158,7 +159,7 @@ function rwaRate(entry, day, moment, prices) {
   return {
     usd: v.usd,
     jpy: jpy ? decimal(Number(v.usd) * jpy, 6) : "0",
-    source: `${twin}${entry.valuation};${v.source};${jpy ? `frankfurter.dev ${day.USD.date}` : "unpriced-jpy"}`,
+    source: `${twin}${[entry.valuation, v.source, jpy ? `frankfurter.dev ${day.USD.date}` : "unpriced-jpy"].filter(Boolean).join(";")}`,
     basis: entry.valuation,
   };
 }

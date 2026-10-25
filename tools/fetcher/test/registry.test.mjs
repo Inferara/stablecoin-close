@@ -19,8 +19,8 @@ test("every registry entry is well formed, and every classic one names its own S
     assert.ok(!ids.has(e.id), `duplicate id ${e.id}`);
     ids.add(e.id);
     assert.ok(["mainnet", "testnet"].includes(e.network), e.id);
-    assert.ok(["fund_share", "bond", "commodity"].includes(e.class), e.id);
-    assert.ok(["nav", "fixed_nav", "market"].includes(e.valuation), e.id);
+    assert.ok(["fund_share", "bond", "commodity", "stablecoin"].includes(e.class), e.id);
+    assert.ok(["nav", "fixed_nav", "market", "par"].includes(e.valuation), e.id);
     if (e.token === "classic") assert.equal(e.contract, sacContractId(e.code, e.issuer, e.network), e.id);
     if (e.price_as) {
       const twin = pricedAs(e);
@@ -124,6 +124,16 @@ test("a fixed-NAV fund share is 1.00 at any date, with no price fetched", () => 
   assert.equal(benji.asset.priced_as, undefined);
   assert.deepEqual(benji.movements[0].rate, { usd: "1", jpy: "151.2", basis: "fixed_nav", source: "fixed_nav;fixed-nav;frankfurter.dev 2026-10-09" });
   assert.equal(s.source.kind, "horizon");
+});
+
+test("USDT0 from its own issuer is a stablecoin at par, written as the pegged coins are", () => {
+  const s = buildSnapshot(holding({ network: "mainnet", code: "USDT0", issuer: "GATISXX6BZ6NC7IKQBY37CJD4SOZL3CYZJWXEDG6JVIY4WBS6KXJHN6Q" }));
+  const usdt0 = s.wallets[0].assets.find((a) => a.asset.code === "USDT0");
+  assert.equal(usdt0.asset.class, "stablecoin");
+  assert.deepEqual(usdt0.movements[0].rate, { usd: "1", jpy: "151.2", basis: "par", source: "par;frankfurter.dev 2026-10-09" });
+  // A look-alike USDT0 issuer is nothing of the kind.
+  const fake = buildSnapshot(holding({ network: "mainnet", code: "USDT0", issuer: COPYCAT }));
+  assert.equal(fake.wallets[0].assets.find((a) => a.asset.code === "USDT0").closing_rate.source, "unpriced;unpriced-jpy");
 });
 
 test("the same code from another issuer is neither classed nor valued", () => {

@@ -162,6 +162,25 @@
       "note": "One token is one troy ounce of gold. A Soroban token (SEP-41), not a classic asset: Horizon does not show its balances, so tools/fetcher does not read its holdings yet."
     },
     {
+      "id": "usdt0",
+      "name": "USDT0",
+      "issuer_name": "Everdawn Labs (USDT0 Network, Tether's omnichain USDT)",
+      "home_domain": "usdt0.to",
+      "network": "mainnet",
+      "code": "USDT0",
+      "issuer": "GATISXX6BZ6NC7IKQBY37CJD4SOZL3CYZJWXEDG6JVIY4WBS6KXJHN6Q",
+      "contract": "CBSJZEIO5C7KC2SF3MKSNXXJSW5G3VTNBX4ATMKUI3B2MR4JKM4R26YF",
+      "token": "classic",
+      "decimals": 7,
+      "class": "stablecoin",
+      "valuation": "par",
+      "sources": [
+        { "kind": "fixed", "value": "1" },
+        { "kind": "redstone_sep40", "asset": "CBSJZEIO5C7KC2SF3MKSNXXJSW5G3VTNBX4ATMKUI3B2MR4JKM4R26YF" }
+      ],
+      "note": "Tether's USD stablecoin, bridged to Stellar through LayerZero: supply is minted and burned only by the USDT0 SAC Manager contract (usdt0.to's stellar.toml). Valued at par; the RedStone reading is a market cross-check. Horizon lists many look-alike USDT0 issuers."
+    },
+    {
       "id": "cetes-testnet",
       "name": "Etherfuse CETES (testnet sandbox)",
       "issuer_name": "Etherfuse",

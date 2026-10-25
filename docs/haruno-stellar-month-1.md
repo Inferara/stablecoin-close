@@ -150,8 +150,8 @@ knowledge; `tools/fetcher` writes these fields for the assets it lists.
 }
 ```
 
-- `asset.class` is `fund_share`, `bond` or `commodity`: what the token is a claim
-  on. It is matched by code **and** issuer (or contract), never by code alone, since
+- `asset.class` is `fund_share`, `bond`, `commodity` or `stablecoin`: what the
+  token is a claim on. It is matched by code **and** issuer (or contract), never by code alone, since
   anyone can issue an asset of any code.
 - `asset.priced_as` names the mainnet asset whose price values a **testnet**
   token. There is no testnet market, so a test token from an issuer's sandbox is
@@ -161,5 +161,5 @@ knowledge; `tools/fetcher` writes these fields for the assets it lists.
   the USD number is: `nav` (the issuer's net asset value or redemption value, for
   example from an oracle's FUNDAMENTAL feed), `fixed_nav` (a fund with a stated
   stable NAV, such as 1.00), or `market` (a traded price, used only where the market
-  tracks the value closely). Absent means the writer did not say; `source` still
+  tracks the value closely), or `par` (a stablecoin at its peg). Absent means the writer did not say; `source` still
   names where the number came from. A traded price is never a fund share's NAV.

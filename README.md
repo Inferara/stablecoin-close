@@ -25,9 +25,10 @@ the parts anyone can use or check without Haruno:
 | [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. [Live](https://inferara.github.io/stablecoin-close/pages/payer/) |
 | [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. [Live](https://inferara.github.io/stablecoin-close/pages/anchor/) |
 | [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. [Live](https://inferara.github.io/stablecoin-close/pages/verifier/) |
+| [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
-| [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm): what each is, and where a real value for it comes from. |
+| [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm, and the USDT0 stablecoin): what each is, and where a real value for it comes from. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
 
 ## Prior art, and how Haruno differs
@@ -197,7 +198,12 @@ use a salt that is not published:
 
 Live on GitHub Pages: [payer](https://inferara.github.io/stablecoin-close/pages/payer/),
 [anchor](https://inferara.github.io/stablecoin-close/pages/anchor/),
-[verifier](https://inferara.github.io/stablecoin-close/pages/verifier/).
+[verifier](https://inferara.github.io/stablecoin-close/pages/verifier/),
+[RWA values](https://inferara.github.io/stablecoin-close/pages/rwa/).
+
+The RWA values page reads mainnet, not testnet: the registry's oracles over a public
+mainnet RPC (`https://mainnet.sorobanrpc.com`) and the DEX and supply from Horizon. It
+needs no wallet and signs nothing.
 
 Plain HTML and JavaScript, no build step. They talk to Soroban RPC
 (`https://soroban-testnet.stellar.org`) directly from the browser and load
@@ -364,6 +370,11 @@ Listed here as the work lands; the compare link above shows every change.
   values a testnet sandbox token at its mainnet twin's price, and writes a
   `closing_rate` for every holding. The snapshot format gains the optional
   `asset.class`, `asset.priced_as` and `rate.basis` fields.
+- **Oct 25: RWA values page.** [`pages/rwa`](pages/rwa/) shows every mainnet asset in
+  the registry valued live (about $1.0B on Stellar when it was written): USDY at
+  RedStone's NAV beside its DEX price 1.4% lower, BENJI and WTGX at their stated 1.00
+  NAV with RedStone's BENJI feed as a check, the Etherfuse stablebonds, XAUm, and USDT0
+  at par. USDT0 joins the registry as a `stablecoin` valued at `par`.
 
 Parts of this repository were written with AI coding assistants.
 

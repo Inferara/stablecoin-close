@@ -1,0 +1,608 @@
+{
+  "format": "haruno.stellar.month/1",
+  "month": "2026-10",
+  "fetched_at": "2026-10-25T16:43:28Z",
+  "company": "lisbon-coffee-roasters",
+  "reporting_currency": "USD",
+  "source": {
+    "kind": "horizon+rpc",
+    "network": "testnet",
+    "balances": "reconstructed",
+    "notes": [
+      "Treasury: opening was worked back from today's balance; closing is today's balance.",
+      "Payroll: opening was worked back from today's balance; closing is today's balance.",
+      "Team: opening was worked back from today's balance; closing is today's balance.",
+      "Treasury investments: opening was worked back from today's balance; closing is today's balance.",
+      "Etherfuse CETES (testnet sandbox) is valued at the price of Etherfuse CETES on mainnet: there is no testnet market."
+    ]
+  },
+  "wallets": [
+    {
+      "id": "w-1",
+      "name": "Treasury",
+      "purpose": "receivables",
+      "owner": null,
+      "network": "testnet",
+      "address": "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML",
+      "gl_account": "USDC Treasury",
+      "assets": [
+        {
+          "asset": {
+            "code": "XLM",
+            "issuer": null,
+            "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          },
+          "opening": "0.0000000",
+          "closing": "19.9999500",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "bda5d3ec694f452d45f38f6a82abc01ad04cedb2955b74428ca2693219e755d5",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:02Z",
+              "direction": "in",
+              "amount": "60.0000000",
+              "counterparty": "GAZ5ZBS7GWA2XPAIQPCQHDZBKO6IL3QCYRY3QJPDPWFJVJRH3FQ4COVW",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "create_account",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "176769d893e014f4e7de988901db35bbfe4fa39e15c26d38a7be3d8263cc57d2",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:37Z",
+              "direction": "out",
+              "amount": "0.0000200",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "87bacbb95f793f1c2d44c4f714d88281b8fa5824729b3a0ddf13e2da8cf9fb73",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:37Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "7d7525768f3235bafc1d9980d1376bb3f7161ef0a00011ba4e2d2475b1d3b76d",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:42Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "a63baa5900a9e18802a853d9e1c5be319f1a5514f0ee6c902fde02aeae3a90df",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:47Z",
+              "direction": "out",
+              "amount": "40.0000000",
+              "counterparty": "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX",
+              "counterparty_wallet": "w-4",
+              "internal": true,
+              "kind": "create_account",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "a63baa5900a9e18802a853d9e1c5be319f1a5514f0ee6c902fde02aeae3a90df",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:47Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            }
+          ]
+        },
+        {
+          "asset": {
+            "code": "USDC",
+            "issuer": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+            "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+          },
+          "opening": "0.0000000",
+          "closing": "8.0000000",
+          "closing_rate": {
+            "usd": "1",
+            "jpy": "156.8",
+            "source": "par;frankfurter.dev 2026-10-23"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "65524c3a93bbe009cb6327e7d357d1108ff59192005e170ea0193babc5b451de",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:27Z",
+              "direction": "in",
+              "amount": "12.0000000",
+              "counterparty": "GCGZQQKKI6TXHX5V4MRMDUXLXIR5FI3OG2FHUGOTAH3V5JORRCTBRIDU",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "sac_transfer",
+              "memo": null,
+              "invoice_ref": "INV-1001",
+              "invoice_ref_source": "contract",
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            },
+            {
+              "tx_hash": "8db8ab88e3a77bbd9776246115a79a718ad2c3b2033e1039dd82d8d77d100a5c",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:32Z",
+              "direction": "in",
+              "amount": "3.0000000",
+              "counterparty": "GCGZQQKKI6TXHX5V4MRMDUXLXIR5FI3OG2FHUGOTAH3V5JORRCTBRIDU",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            },
+            {
+              "tx_hash": "87bacbb95f793f1c2d44c4f714d88281b8fa5824729b3a0ddf13e2da8cf9fb73",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:37Z",
+              "direction": "out",
+              "amount": "5.0000000",
+              "counterparty": "GACQMOWTVRCMPYB4PDI6UPCHG5E3TFSLBXAU6GRZJM5RFXIWSM3JHHDZ",
+              "counterparty_wallet": "w-2",
+              "internal": true,
+              "kind": "payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            },
+            {
+              "tx_hash": "7d7525768f3235bafc1d9980d1376bb3f7161ef0a00011ba4e2d2475b1d3b76d",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:42Z",
+              "direction": "out",
+              "amount": "2.0000000",
+              "counterparty": "GDRCKHUD6INZNBKGDH2OB5KJ5RU45PXQYNEQBPZ5I5IUTOU673NPTROU",
+              "counterparty_wallet": "w-3",
+              "internal": true,
+              "kind": "payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w-2",
+      "name": "Payroll",
+      "purpose": "payroll",
+      "owner": null,
+      "network": "testnet",
+      "address": "GACQMOWTVRCMPYB4PDI6UPCHG5E3TFSLBXAU6GRZJM5RFXIWSM3JHHDZ",
+      "gl_account": "Payroll Wallet",
+      "assets": [
+        {
+          "asset": {
+            "code": "XLM",
+            "issuer": null,
+            "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          },
+          "opening": "0.0000000",
+          "closing": "4.9999900",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "7e306dbd5d34907bb95fb5d56a34455b7bea3ef67fd8a5da83a06f1492ab6d2b",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:27Z",
+              "direction": "in",
+              "amount": "5.0000000",
+              "counterparty": "GAZ5ZBS7GWA2XPAIQPCQHDZBKO6IL3QCYRY3QJPDPWFJVJRH3FQ4COVW",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "create_account",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "891e252f80f9c4f79555f6f15a4812629512a226074e77c0358f1ab361dca662",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:42Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            }
+          ]
+        },
+        {
+          "asset": {
+            "code": "USDC",
+            "issuer": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+            "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+          },
+          "opening": "0.0000000",
+          "closing": "5.0000000",
+          "closing_rate": {
+            "usd": "1",
+            "jpy": "156.8",
+            "source": "par;frankfurter.dev 2026-10-23"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "87bacbb95f793f1c2d44c4f714d88281b8fa5824729b3a0ddf13e2da8cf9fb73",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:37Z",
+              "direction": "in",
+              "amount": "5.0000000",
+              "counterparty": "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML",
+              "counterparty_wallet": "w-1",
+              "internal": true,
+              "kind": "payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w-3",
+      "name": "Team",
+      "purpose": "team",
+      "owner": null,
+      "network": "testnet",
+      "address": "GDRCKHUD6INZNBKGDH2OB5KJ5RU45PXQYNEQBPZ5I5IUTOU673NPTROU",
+      "gl_account": "Employee advances",
+      "assets": [
+        {
+          "asset": {
+            "code": "XLM",
+            "issuer": null,
+            "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          },
+          "opening": "0.0000000",
+          "closing": "4.9999900",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "55761b3266ecc4ecace8c997d6e9bfd617eae4b2c96e5c37f0df4df45ce9ad8e",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:32Z",
+              "direction": "in",
+              "amount": "5.0000000",
+              "counterparty": "GAZ5ZBS7GWA2XPAIQPCQHDZBKO6IL3QCYRY3QJPDPWFJVJRH3FQ4COVW",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "create_account",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "a98b7c232c9e11c9b000822175d7e1612607810a1afbce049b5380667dacc5f3",
+              "op_index": 0,
+              "time": "2026-10-25T16:17:47Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            }
+          ]
+        },
+        {
+          "asset": {
+            "code": "USDC",
+            "issuer": "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+            "contract": "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+          },
+          "opening": "0.0000000",
+          "closing": "2.0000000",
+          "closing_rate": {
+            "usd": "1",
+            "jpy": "156.8",
+            "source": "par;frankfurter.dev 2026-10-23"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "7d7525768f3235bafc1d9980d1376bb3f7161ef0a00011ba4e2d2475b1d3b76d",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:42Z",
+              "direction": "in",
+              "amount": "2.0000000",
+              "counterparty": "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML",
+              "counterparty_wallet": "w-1",
+              "internal": true,
+              "kind": "payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "1",
+                "jpy": "156.8",
+                "source": "par;frankfurter.dev 2026-10-23"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "w-4",
+      "name": "Treasury investments",
+      "purpose": "treasury",
+      "owner": null,
+      "network": "testnet",
+      "address": "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX",
+      "gl_account": "Short-term investments",
+      "assets": [
+        {
+          "asset": {
+            "code": "XLM",
+            "issuer": null,
+            "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          },
+          "opening": "0.0000000",
+          "closing": "19.9999800",
+          "closing_rate": {
+            "usd": "0",
+            "jpy": "0",
+            "source": "unpriced;unpriced-jpy"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "a63baa5900a9e18802a853d9e1c5be319f1a5514f0ee6c902fde02aeae3a90df",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:47Z",
+              "direction": "in",
+              "amount": "40.0000000",
+              "counterparty": "GC2GL5AFJ5DVP6C3GL5RGPC2C4V34LLXKJ7RFXNCHG6PENZLXXSX5ZML",
+              "counterparty_wallet": "w-1",
+              "internal": true,
+              "kind": "create_account",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "e0816823db327ca5de45a96b2b5cea998ae3f8cb1b6e70499f29edc565664f6b",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:52Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "608b891f7342dc1844e6ec14f0f4801f85a089fc57c613661e6b76a5fc36da2c",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:57Z",
+              "direction": "out",
+              "amount": "20.0000000",
+              "counterparty": "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "path_payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            },
+            {
+              "tx_hash": "608b891f7342dc1844e6ec14f0f4801f85a089fc57c613661e6b76a5fc36da2c",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:57Z",
+              "direction": "out",
+              "amount": "0.0000100",
+              "counterparty": null,
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "fee",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0",
+                "jpy": "0",
+                "source": "unpriced;unpriced-jpy"
+              }
+            }
+          ]
+        },
+        {
+          "asset": {
+            "code": "CETES",
+            "issuer": "GC3CW7EDYRTWQ635VDIGY6S4ZUF5L6TQ7AA4MWS7LEQDBLUSZXV7UPS4",
+            "contract": "CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC",
+            "class": "bond",
+            "priced_as": {
+              "network": "mainnet",
+              "code": "CETES",
+              "issuer": "GCRYUGD5NVARGXT56XEZI5CIFCQETYHAPQQTHO2O3IQZTHDH4LATMYWC"
+            }
+          },
+          "opening": "0.0000000",
+          "closing": "284.2319674",
+          "closing_rate": {
+            "usd": "0.063628",
+            "jpy": "9.97687",
+            "source": "mainnet-twin;market;redstone 2026-10-25T09:05:00Z;frankfurter.dev 2026-10-23",
+            "basis": "market"
+          },
+          "caveat": null,
+          "movements": [
+            {
+              "tx_hash": "608b891f7342dc1844e6ec14f0f4801f85a089fc57c613661e6b76a5fc36da2c",
+              "op_index": 0,
+              "time": "2026-10-25T16:42:57Z",
+              "direction": "in",
+              "amount": "284.2319674",
+              "counterparty": "GCNK6K4YKICNTETUO5DDY6HALMEP635AIHXW2SDQBZHF3ITCRHWK23CX",
+              "counterparty_wallet": null,
+              "internal": false,
+              "kind": "path_payment",
+              "memo": null,
+              "invoice_ref": null,
+              "invoice_ref_source": null,
+              "rate": {
+                "usd": "0.063628",
+                "jpy": "9.97687",
+                "source": "mainnet-twin;market;redstone 2026-10-25T09:05:00Z;frankfurter.dev 2026-10-23",
+                "basis": "market"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

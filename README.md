@@ -21,7 +21,8 @@ Try it in the browser; nothing to install:
 3. **Verify a closed month.** Open the [verifier for September 2026](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09) and click "Try it with a sample report": the PDF is hashed in your browser and checked against the hash anchored on testnet.
 
 In code: the two contracts in [`contracts/`](contracts/) (`cargo test`), the snapshot format in
-[`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md), and the fetcher in
+[`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) with a
+[real month written in it](docs/examples/lisbon-coffee-roasters-2026-10.json), and the fetcher in
 [`tools/fetcher`](tools/fetcher/) (`npm test`, no network needed).
 
 ## The problem
@@ -46,6 +47,8 @@ the parts anyone can use or check without Haruno:
 | [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
+| [`docs/examples`](docs/examples/lisbon-coffee-roasters-2026-10.json) | A snapshot of the demo company's October on testnet, as the fetcher wrote it. |
+| [`tools/demo`](tools/demo/) | Stages that demo month on testnet: wallets, invoices, payments, internal transfers and a tokenised bond. |
 | [`tools/deploy`](tools/deploy/bin/deploy.mjs) | Uploads, deploys and extends the contracts on testnet with fee-bump transactions. |
 | [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm, and the USDT0 stablecoin): what each is, and where a real value for it comes from. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
@@ -432,6 +435,14 @@ Listed here as the work lands; the compare link above shows every change.
   days (70 and 89 XLM on the same day), and were redeployed with fee-bump
   transactions from [`tools/deploy`](tools/deploy/bin/deploy.mjs). The pages, the demo
   invoice and the sample anchor moved to the new contracts.
+- **Oct 25: the demo month on testnet.** [`tools/demo`](tools/demo/) staged the demo
+  company's October: four wallets, three invoices registered on InvoiceSettlement, INV-1001
+  [paid through the contract](https://stellar.expert/explorer/testnet/tx/65524c3a93bbe009cb6327e7d357d1108ff59192005e170ea0193babc5b451de),
+  an unexplained 3 USDC, two internal transfers, and Etherfuse sandbox CETES
+  [bought](https://stellar.expert/explorer/testnet/tx/608b891f7342dc1844e6ec14f0f4801f85a089fc57c613661e6b76a5fc36da2c)
+  by a "Treasury investments" wallet. The fetcher's snapshot of it is
+  [`docs/examples/lisbon-coffee-roasters-2026-10.json`](docs/examples/lisbon-coffee-roasters-2026-10.json):
+  the CETES is a `bond` valued at mainnet CETES's price. It is recorded as a test fixture.
 
 Parts of this repository were written with AI coding assistants.
 

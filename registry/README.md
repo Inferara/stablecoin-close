@@ -16,6 +16,8 @@ Identifiers, oracle contracts and feeds were checked on 2026-10-25 against Horiz
 
 ## Format (`stellar-rwa-registry/1`)
 
+[`stellar-rwa.schema.json`](stellar-rwa.schema.json) is its JSON Schema (draft 2020-12). CI checks the registry against it on every change (`tools/fetcher`, `npm test`), and an editor that reads `$schema` checks it as you type.
+
 - `oracles`: the on-chain price contracts the sources refer to, with their network, decimals and base currency. RedStone's SEP-40 contract keeps about the last ten updates (two to three days); a reading older than `stale_after_hours` is not used.
 - `assets[]`: one entry per token and network.
   - `id`, `name`, `issuer_name`, `home_domain`.

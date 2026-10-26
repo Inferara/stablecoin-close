@@ -354,7 +354,7 @@
     $("total").textContent = valued.length
       ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(total)
       : "Not available";
-    $("total-note").textContent = `Supply on Stellar × value per token, across ${valued.length} of ${entries.length} assets listed in the registry (checked ${registry.checked}).`;
+    $("total-note").textContent = `Supply on Stellar × value per token, across ${valued.length} of the ${entries.length} assets in the registry (checked ${registry.checked}).`;
   }
 
   main();

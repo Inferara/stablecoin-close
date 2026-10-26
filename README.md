@@ -10,13 +10,13 @@ Built for HackMeridian 2026 (Scale track).
 
 | | |
 |---|---|
-| Demo video | _added with the submission on Oct 26_ |
-| Pitch deck (PDF) | _added with the submission on Oct 26_ |
+| Demo video | [VIDEO_LINK](VIDEO_LINK) |
+| Pitch deck (PDF) | [`docs/Inferara-Haruno-Hackmeridian.pdf`](docs/Inferara-Haruno-Hackmeridian.pdf) |
 | What changed at the event | [compare `pre-hackmeridian...main`](https://github.com/Inferara/stablecoin-close/compare/pre-hackmeridian...main), and [Built at HackMeridian](#built-at-hackmeridian-october-25-26) below |
 
 Try it in the browser; nothing to install:
 
-1. **RWA values on mainnet.** Open the [RWA values page](https://inferara.github.io/stablecoin-close/pages/rwa/): Stellar's tokenised funds, bonds and gold, each valued from the issuer's NAV on chain or its stated NAV, with the DEX price beside it.
+1. **RWA values on mainnet.** Open the [RWA values page](https://inferara.github.io/stablecoin-close/pages/rwa/): the tokenised funds, bonds and gold in the open registry, each valued from the issuer's NAV on chain or its stated NAV, with the DEX price beside it.
 2. **Pay an invoice.** Open the [open demo invoice](https://inferara.github.io/stablecoin-close/pages/payer/?invoice=14743a09ff3744e5b12f7736e02e9627a520f8a442100d2359371bde2de44e39&merchant=GD2HID4AHAGP3ELHAROKJU4PAHZT2PCTBIDODI5MWPDFPKDMBAAZJH4Q) (5.00 USDC on testnet). It shows the invoice without a wallet (once someone has paid it, who paid and when); paying needs [Freighter](https://freighter.app) on Testnet with test USDC.
 3. **Verify a closed month.** Open the [verifier for September 2026](https://inferara.github.io/stablecoin-close/pages/verifier/?company=346c9389e34031e562c9dec42d2178b7dc7d2e87d0e2f9e452986f2da210fe7f&period=2026-09) and click "Try it with a sample report": the PDF is hashed in your browser and checked against the hash anchored on testnet.
 
@@ -28,9 +28,11 @@ In code: the two contracts in [`contracts/`](contracts/) (`cargo test`), the sna
 ## The problem
 
 A company that is paid in stablecoins (USDC, EURC) on Stellar, often into several
-wallets, closes its books every month. Today the wallets are invisible to the books.
-Someone exports a CSV from an explorer, matches payments to invoices by hand,
-guesses the accounting treatment, and nobody can later check the result.
+wallets, closes its books every month. Accountants know the books, not the chain,
+and today the wallets are invisible to the books. Someone exports a CSV from an
+explorer, matches payments to invoices by hand and guesses the accounting
+treatment: a transfer between the company's own wallets gets booked as income, and a
+tokenised bond or fund share as "crypto". The result is hard to verify.
 
 Haruno is an existing accounting-review app. For this, a connector writes a
 verified monthly snapshot of the company's Stellar wallets, and Haruno's books
@@ -44,7 +46,7 @@ the parts anyone can use or check without Haruno:
 | [`pages/payer`](pages/payer/) | Static page a customer opens from an invoice link or QR code: shows the invoice, connects Freighter, pays. [Live](https://inferara.github.io/stablecoin-close/pages/payer/) |
 | [`pages/anchor`](pages/anchor/) | Static page where the reviewer signs off a month: their own wallet anchors the report hash. [Live](https://inferara.github.io/stablecoin-close/pages/anchor/) |
 | [`pages/verifier`](pages/verifier/) | Static page where anyone drops in a report PDF and sees whether it matches the anchored hash. [Live](https://inferara.github.io/stablecoin-close/pages/verifier/) |
-| [`pages/rwa`](pages/rwa/) | Static page showing Stellar's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. A dropped month snapshot has its real-world assets valued again now. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
+| [`pages/rwa`](pages/rwa/) | Static page showing the registry's tokenised real-world assets valued live on mainnet: the issuer's NAV from RedStone on chain or the stated NAV, the DEX price beside it, and the value on Stellar. A dropped month snapshot has its real-world assets valued again now. [Live](https://inferara.github.io/stablecoin-close/pages/rwa/) |
 | [`docs/haruno-stellar-month-1.md`](docs/haruno-stellar-month-1.md) | The monthly snapshot format a connector writes. |
 | [`tools/fetcher`](tools/fetcher/) | Reference CLI that writes that snapshot from public addresses. |
 | [`docs/examples`](docs/examples/lisbon-coffee-roasters-2026-10.json) | A snapshot of the demo company's October on testnet, as the fetcher wrote it. |
@@ -77,7 +79,8 @@ wallets against the books and open invoices, raises findings in plain language
 (a receipt with no invoice, a memo that does not match, a balance that does not
 agree), classifies holdings per accounting standard, and produces a signed-off
 close whose report hash anyone can verify here. Haruno is an existing product
-with users, and this repository is the open slice of a feature in it.
+with users, in pilots in Taiwan and the US, and this repository is the open slice of
+a feature in it.
 
 ## How it fits together
 
@@ -424,7 +427,8 @@ existed before that date:
 
 Haruno, the app that reads the snapshot and reconciles it, is an existing product
 and is not in this repository. Its Stellar connector, and the reconciliation of the
-snapshot in its books engine, were also built before the event.
+snapshot in its books engine, were also built before the event; their support for
+tokenised real-world assets was added at it (below).
 
 ### Built at HackMeridian (October 25-26)
 
@@ -437,7 +441,9 @@ Listed here as the work lands; the compare link above shows every change.
   `closing_rate` for every holding. The snapshot format gains the optional
   `asset.class`, `asset.priced_as` and `rate.basis` fields.
 - **Oct 25: RWA values page.** [`pages/rwa`](pages/rwa/) shows every mainnet asset in
-  the registry valued live (about $1.0B on Stellar when it was written): USDY at
+  the registry valued live (about $1.0B when it was written, of the $3-4B in tokenised
+  assets on Stellar; Soroban-only tokens such as Spiko, about half of it, are not in
+  the registry yet): USDY at
   RedStone's NAV beside its DEX price 1.4% lower, BENJI and WTGX at their stated 1.00
   NAV with RedStone's BENJI feed as a check, the Etherfuse stablebonds, XAUm, and USDT0
   at par. USDT0 joins the registry as a `stablecoin` valued at `par`.
@@ -466,6 +472,19 @@ Listed here as the work lands; the compare link above shows every change.
   (or try the demo company's October): each real-world asset in it is shown at the
   value written at month end and at the live value now, testnet tokens at their mainnet
   twins' prices. The file is read in the browser and never uploaded.
+- **Oct 25: real-world assets in Haruno.** Haruno itself is not in this repository;
+  these changes were made at the event and shipped to Haruno's users the same day as an
+  update of its Stellar module. Tokenised bonds are classed as bonds and priced at
+  their market price (a testnet sandbox bond at its mainnet twin's), USDY is valued at
+  its NAV read on chain from RedStone, and BENJI and WTGX at their stated NAV. The close books them by what they are, not as
+  crypto assets: securities in Japan; in the US, debt securities (ASC 320) for the
+  bonds, and cash equivalents or investments for the money-market fund shares. The
+  module also defaults to the redeployed testnet contracts.
+- **Oct 26: the demo month closed.** INV-1004 (4.00 USDC) was
+  [paid through the contract](TX_LINK_INV_1004) and matched in Haruno, October was
+  closed against the books, and the September report was
+  [anchored on testnet](TX_LINK_ANCHOR_2026_09) by the reviewer's own wallet and checked
+  on the [verifier](VERIFIER_LINK_2026_09). The [demo video](VIDEO_LINK) shows the run.
 
 Parts of this repository were written with AI coding assistants.
 

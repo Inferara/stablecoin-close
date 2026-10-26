@@ -13,6 +13,7 @@ Built for HackMeridian 2026 (Scale track).
 | Demo video | [VIDEO_LINK](VIDEO_LINK) |
 | Pitch deck (PDF) | [`docs/Inferara-Haruno-Hackmeridian.pdf`](docs/Inferara-Haruno-Hackmeridian.pdf) |
 | What changed at the event | [compare `pre-hackmeridian...main`](https://github.com/Inferara/stablecoin-close/compare/pre-hackmeridian...main), and [Built at HackMeridian](#built-at-hackmeridian-october-25-26) below |
+| AI use | AI tools were used to write the code for this project and, because of the time available, to edit the demo video. Everything shown in the video is real footage. |
 
 Try it in the browser; nothing to install:
 

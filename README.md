@@ -56,6 +56,20 @@ the parts anyone can use or check without Haruno:
 | [`registry/stellar-rwa.json`](registry/) | Open registry of tokenised real-world assets on Stellar (USDY, BENJI, WTGX, Etherfuse stablebonds, XAUm, and the USDT0 stablecoin): what each is, and where a real value for it comes from. |
 | [`deployments/testnet.json`](deployments/testnet.json) | Contract ids on testnet. |
 
+## Traction
+
+Haruno is a product in pilots today, not an idea:
+
+| Where | What |
+|---|---|
+| Taiwan | Pilot with NYCU's IAPS incubator and its 20 portfolio companies |
+| United States | 5 finance professionals testing it, including tax accountants |
+| Japan | Inferara is based in Fukuoka and works with local companies |
+
+- 3rd prize, Taiwan Best AI Awards (April 2026)
+- TAcc+ international startup program, Taiwan (July 2026)
+- Stellar builders: Inferara delivered and maintains 3 separate projects
+
 ## Prior art, and how Haruno differs
 
 Invoice settlement on Stellar is well covered at hackathons: StellarInvoice,

@@ -10,7 +10,7 @@ Built for HackMeridian 2026 (Scale track).
 
 | | |
 |---|---|
-| Demo video | [VIDEO_LINK](VIDEO_LINK) |
+| Demo video | [youtu.be/ZL4fp5_jndg](https://youtu.be/ZL4fp5_jndg) |
 | Pitch deck (PDF) | [`docs/Inferara-Haruno-Hackmeridian.pdf`](docs/Inferara-Haruno-Hackmeridian.pdf) |
 | What changed at the event | [compare `pre-hackmeridian...main`](https://github.com/Inferara/stablecoin-close/compare/pre-hackmeridian...main), and [Built at HackMeridian](#built-at-hackmeridian-october-25-26) below |
 | AI use | AI tools were used to write the code for this project and, because of the time available, to edit the demo video. Everything shown in the video is real footage. |
@@ -496,10 +496,10 @@ Listed here as the work lands; the compare link above shows every change.
   bonds, and cash equivalents or investments for the money-market fund shares. The
   module also defaults to the redeployed testnet contracts.
 - **Oct 26: the demo month closed.** INV-1004 (4.00 USDC) was
-  [paid through the contract](TX_LINK_INV_1004) and matched in Haruno, October was
+  [paid through the contract](https://stellar.expert/explorer/testnet/tx/df18c7a096e16125f9605e990955f098333d10e0318e031d9d9e897fa1dc1372) and matched in Haruno, October was
   closed against the books, and the September report was
-  [anchored on testnet](TX_LINK_ANCHOR_2026_09) by the reviewer's own wallet and checked
-  on the [verifier](VERIFIER_LINK_2026_09). The [demo video](VIDEO_LINK) shows the run.
+  [anchored on testnet](https://stellar.expert/explorer/testnet/tx/030653163f26020bbb950c5a14b12557c493a3ef52b646c179b6f1f03034112a) by the reviewer's own wallet and checked
+  on the [verifier](https://inferara.github.io/stablecoin-close/pages/verifier/?company=624a9d5d5151d34a91b53b4562496ad012a35ed07ca0a1aa18d87530d588634e&period=2026-09). The [demo video](https://youtu.be/ZL4fp5_jndg) shows the run.
 
 Parts of this repository were written with AI coding assistants.
 
